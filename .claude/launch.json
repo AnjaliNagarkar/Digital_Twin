@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Village Digital Twin — Go API Server",
+      "runtimeExecutable": "go",
+      "runtimeArgs": ["run", "./backend/cmd/server/main.go"],
+      "port": 8080
+    }
+  ]
+}

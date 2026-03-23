@@ -275,6 +275,32 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
 .chip.on { background: var(--c-teal-soft); border-color: var(--c-teal); color: var(--c-teal); }
 .chip.on-red { background: var(--c-red-soft); border-color: var(--c-red); color: var(--c-red); }
 
+/* ── Apply Filter Button ── */
+.apply-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 9px 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 1.8px; text-transform: uppercase;
+  border: none; border-radius: var(--radius);
+  cursor: pointer;
+  background: var(--c-teal);
+  color: #060810;
+  transition: background .18s, transform .1s, box-shadow .18s;
+  box-shadow: 0 2px 10px rgba(40,192,168,0.22);
+  position: relative; overflow: hidden;
+}
+.apply-btn:hover  { background: #35d4bc; box-shadow: 0 4px 18px rgba(40,192,168,0.38); }
+.apply-btn:active { transform: scale(0.97); }
+.apply-btn.applied { background: var(--c-green); }
+.filter-count {
+  display: inline-block;
+  background: rgba(255,255,255,0.25);
+  border-radius: 10px; padding: 1px 6px;
+  font-size: 9px; margin-left: 5px;
+}
+
 /* ═══════ CENTER — MAP/3D ═══════ */
 .center { position: relative; background: var(--bg-root); overflow: hidden; }
 
@@ -504,6 +530,100 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
 .zl-pop    { font-size: 9.5px; color: #374151; margin-top: 1px; }
 .zl-issue  { font-size: 9px; color: #6b7280; margin-top: 3px; font-style: italic; border-top: 1px solid #f0f0f0; padding-top: 3px; }
 
+/* ── Map Mode Toolbar (Markers / Heatmap toggle) ── */
+.map-toolbar {
+  position: absolute;
+  top: 12px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  display: flex;
+  background: rgba(255,255,255,0.97);
+  border: 1px solid rgba(0,0,0,0.13);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.16);
+}
+.mt-btn {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  padding: 8px 20px;
+  background: transparent;
+  border: none; border-right: 1px solid rgba(0,0,0,0.08);
+  color: #6b7280;
+  cursor: pointer;
+  transition: all .18s;
+  display: flex; align-items: center; gap: 6px;
+}
+.mt-btn:last-child { border-right: none; }
+.mt-btn:hover { color: #111827; background: rgba(0,0,0,0.04); }
+.mt-btn.active { background: #111827; color: #fff; }
+
+/* ── Risk Score Badge (inside popups + panel) ── */
+.risk-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 4px;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.risk-badge.crit { background: rgba(224,72,72,0.12);  color: #e04848; border: 1px solid rgba(224,72,72,0.3); }
+.risk-badge.med  { background: rgba(224,160,40,0.12); color: #e0a028; border: 1px solid rgba(224,160,40,0.3); }
+.risk-badge.dev  { background: rgba(64,192,96,0.12);  color: #40c060; border: 1px solid rgba(64,192,96,0.3); }
+
+/* ── Popup enhancements ── */
+.ph-header { margin-bottom: 9px; }
+.ph-status { display: flex; align-items: center; gap: 7px; margin-top: 4px; flex-wrap: wrap; }
+.ph-ward { font-family: var(--font-mono); font-size: 9.5px; color: #6b7280; }
+.ph-issues { margin-top: 9px; border-top: 1px solid #f3f4f6; padding-top: 7px; }
+.ph-issues-label { font-family: var(--font-mono); font-size: 8px; text-transform: uppercase; letter-spacing: 1.2px; color: #9ca3af; margin-bottom: 5px; }
+.issue-tag {
+  display: inline-block; margin: 2px 2px;
+  padding: 2px 7px; border-radius: 3px;
+  font-size: 9px; font-family: var(--font-mono); font-weight: 600;
+  background: #fee2e2; color: #991b1b;
+}
+.issue-tag.warn { background: #fff7ed; color: #9a3412; }
+.ph-ok { color: #065f46; font-size: 10.5px; font-family: var(--font-mono); margin-top: 8px; padding: 5px 8px; background: #f0fdf4; border-radius: 4px; }
+
+/* ── Risk Summary Bar (overview panel) ── */
+.risk-summary { margin-bottom: 18px; }
+.rs-bar {
+  height: 10px; background: var(--bg-card);
+  border-radius: 5px; overflow: hidden; display: flex;
+  margin-bottom: 9px; gap: 1px;
+}
+.rs-seg { height: 100%; transition: width .8s cubic-bezier(.22,1,.36,1); }
+.rs-seg.critical  { background: var(--c-red); }
+.rs-seg.medium    { background: var(--c-amber); }
+.rs-seg.developed { background: var(--c-green); }
+.rs-legend {
+  display: flex; gap: 14px; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: 9.5px; color: var(--text-muted);
+}
+.rs-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 3px; vertical-align: middle; }
+.rs-dot.critical  { background: var(--c-red); }
+.rs-dot.medium    { background: var(--c-amber); }
+.rs-dot.developed { background: var(--c-green); }
+
+/* ── Risk-aware gi (gap list items) ── */
+.gi.risk-critical { border-color: var(--c-red); }
+.gi.risk-medium   { border-color: var(--c-amber); }
+.gi.risk-developed{ border-color: var(--c-green); }
+
+/* ── Score breakdown row ── */
+.score-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 5px 0; border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+.score-row:last-child { border-bottom: none; }
+.score-row .sr-name { color: var(--text-secondary); }
+.score-row .sr-pts  { font-family: var(--font-mono); font-size: 10px; color: var(--c-red); font-weight: 600; }
+.score-row .sr-ok   { font-family: var(--font-mono); font-size: 10px; color: var(--c-green); }
+.score-total { display: flex; align-items: baseline; justify-content: space-between; padding: 8px 0 4px; }
+.score-total .st-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
+.score-total .st-val   { font-family: var(--font-mono); font-size: 22px; font-weight: 700; }
+
 /* ── 3D Hover Tooltip ── */
 #twin-tip {
   position: fixed;
@@ -591,6 +711,9 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
     <div class="filters">
       <h3>Quick Filters</h3>
       <div class="chips" id="chips"></div>
+      <button class="apply-btn" id="apply-btn" onclick="applyFilterBtn()">
+        Apply Filter <span class="filter-count" id="filter-count" style="display:none"></span>
+      </button>
     </div>
   </div>
 
@@ -598,6 +721,11 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
   <div class="center">
     <div id="map-2d"></div>
     <div id="map-3d" class="view-hidden"></div>
+    <!-- Map mode toggle — only visible in 2D -->
+    <div class="map-toolbar" id="map-toolbar">
+      <button class="mt-btn active" id="btn-markers" onclick="setMapMode('markers')">◉ Markers</button>
+      <button class="mt-btn" id="btn-heatmap" onclick="setMapMode('heatmap')">◎ Heatmap</button>
+    </div>
     <div class="legend" id="legend"></div>
     <div class="mode-3d-label" id="mode3d-label"><span class="dot3d"></span> 3D Digital Twin</div>
     <div class="loading-overlay" id="loader"><div class="spinner"></div><span>Initializing spatial engine…</span></div>
@@ -621,6 +749,7 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
 <!-- ═══════════ SCRIPTS ═══════════ -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script src="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Cesium.js"></script>
 
 <script>
@@ -636,11 +765,34 @@ const C = {
 };
 
 // ═══════════════════════════════════════════════════════════
+// RISK SCORE ENGINE
+// score = no_toilet(30) + no_water(25) + no_elec(20) + bpl(15) + large_fam(10)
+// Critical > 60 | Medium 30–60 | Developed < 30
+// ═══════════════════════════════════════════════════════════
+function riskScore(h) {
+  let s = 0;
+  if (!h.has_toilet)       s += 30;
+  if (!h.has_water_supply) s += 25;
+  if (!h.has_electricity)  s += 20;
+  if (h.bpl)               s += 15;
+  if (h.total_members > 5) s += 10;
+  return s;
+}
+function riskClass(score) { return score > 60 ? 'critical' : score >= 30 ? 'medium' : 'developed'; }
+function riskLabel(score) { return score > 60 ? 'Critical' : score >= 30 ? 'Medium'  : 'Developed'; }
+function riskHex(score)   { return score > 60 ? '#e04848'  : score >= 30 ? '#e0a028'  : '#40c060'; }
+function riskCssCls(score){ return score > 60 ? 'red'      : score >= 30 ? 'amb'      : 'grn'; }
+function riskBadgeCls(score){ return score > 60 ? 'crit'   : score >= 30 ? 'med'      : 'dev'; }
+
+// ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
 let allHouses=[], govData=null, welfareData=null, geoData=null, statsData=null;
 let activeQ=null, currentView='2d';
 let filters = { bpl:null, toilet:null, ward:null };
+let mapMode = 'markers';   // 'markers' | 'heatmap'
+let heatmapLayer = null;   // L.heatLayer from leaflet.heat plugin
+let _gridCellsCache = [];  // last computed grid cells — used by panel onclick
 
 // ═══════════════════════════════════════════════════════════
 // LEAFLET INIT
@@ -661,10 +813,11 @@ const cluster = L.markerClusterGroup({
     return L.divIcon({ html: '<div>'+n+'</div>', className: 'marker-cluster marker-cluster-'+sz, iconSize: L.point(34,34) });
   }
 });
-// Layer order: zones (bottom) → cluster markers → heat pulses → zone labels (top)
+// Layer order: grid (bottom) → zones → cluster markers → ambient circles → zone labels (top)
+const gridLayer      = L.layerGroup().addTo(lmap);  // density grid rectangles
 const zoneLayer      = L.layerGroup().addTo(lmap);  // ward-level problem zones
 lmap.addLayer(cluster);
-const heatLayer      = L.layerGroup().addTo(lmap);  // per-house ambient circles
+const ambientLayer   = L.layerGroup().addTo(lmap);  // per-house soft ambient circles
 const zoneLabelLayer = L.layerGroup().addTo(lmap);  // floating zone labels
 
 // ═══════════════════════════════════════════════════════════
@@ -675,6 +828,93 @@ let viewer = null, cesiumEntities = [];
 const houseEntityMap = new Map();
 let _hoveredHouseId = null;   // currently highlighted house
 let _hoverRingEnt   = null;   // reusable selection outline entity
+
+// ═══════════════════════════════════════════════════════════
+// GEO LABEL ENGINE
+// Reverse geocodes CENTER from Nominatim → builds 3-tier
+// zoom-level label system in Cesium (city/suburb/ward/building)
+// ═══════════════════════════════════════════════════════════
+async function fetchAndAddGeoLabels() {
+  if (!viewer) return;
+
+  // ── Nominatim reverse geocode ──
+  let loc = { suburb: '', area: '', city: 'Pune', district: 'Pune', state: 'Maharashtra', country: 'India' };
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${CENTER[0]}&lon=${CENTER[1]}&format=json&zoom=14`,
+      { headers: { 'User-Agent': 'VillageDigitalTwin/1.0' } }
+    );
+    const d = await r.json();
+    const a = d.address || {};
+    loc = {
+      suburb   : a.suburb || a.neighbourhood || '',
+      area     : a.town   || a.village       || a.suburb || '',
+      city     : a.city   || a.county        || a.state_district || 'Pune',
+      district : a.state_district || a.county || '',
+      state    : a.state  || 'Maharashtra',
+      country  : a.country || 'India'
+    };
+  } catch(e) { /* use fallback */ }
+
+  // Build readable name strings
+  const cityLine    = [loc.city, loc.state].filter(Boolean).join(', ');
+  const suburbLine  = [loc.suburb || loc.area, loc.city].filter(Boolean).join(', ');
+  const displayName = loc.suburb || loc.area || loc.city;
+
+  // ── Update the 3D mode badge in topbar ──
+  const badge = document.getElementById('mode3d-label');
+  if (badge) badge.innerHTML =
+    `<span class="dot3d"></span> 3D Twin &mdash; ${displayName}, ${loc.state}`;
+
+  // ── TIER 1: City / State label — visible 2000m → 12000m ──
+  // Large, appears when you first switch to 3D from overview
+  viewer.entities.add({
+    id: '__geo_city',
+    position: Cesium.Cartesian3.fromDegrees(CENTER[1], CENTER[0] + 0.006, 30),
+    label: {
+      text: cityLine,
+      font: 'bold 22px "JetBrains Mono", monospace',
+      fillColor: Cesium.Color.WHITE,
+      outlineColor: Cesium.Color.fromCssColorString('#0a0e18'),
+      outlineWidth: 4,
+      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+      distanceDisplayCondition: new Cesium.DistanceDisplayCondition(1800, 14000),
+      showBackground: true,
+      backgroundColor: Cesium.Color.fromCssColorString('#060810').withAlpha(0.80),
+      backgroundPadding: new Cesium.Cartesian2(16, 8),
+      scale: 1.0
+    }
+  });
+
+  // ── TIER 2: Suburb / Area label — visible 500m → 2000m ──
+  // Medium, appears as you zoom into the village area
+  viewer.entities.add({
+    id: '__geo_suburb',
+    position: Cesium.Cartesian3.fromDegrees(CENTER[1], CENTER[0] + 0.003, 30),
+    label: {
+      text: suburbLine + '\n' + loc.country,
+      font: 'bold 16px "JetBrains Mono", monospace',
+      fillColor: Cesium.Color.fromCssColorString('#e0c87a'),
+      outlineColor: Cesium.Color.fromCssColorString('#0a0e18'),
+      outlineWidth: 3,
+      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+      distanceDisplayCondition: new Cesium.DistanceDisplayCondition(350, 1800),
+      showBackground: true,
+      backgroundColor: Cesium.Color.fromCssColorString('#0b0e14').withAlpha(0.82),
+      backgroundPadding: new Cesium.Cartesian2(12, 7),
+      scale: 1.0
+    }
+  });
+
+  // TIER 3 (ward labels) + TIER 4 (building labels) rendered inside renderCesium()
+}
+
 function initCesium() {
   if (viewer) return;
 
@@ -755,6 +995,9 @@ function initCesium() {
     }
   });
 
+  // ── Fetch real location name from Nominatim and add geo labels ──
+  fetchAndAddGeoLabels();
+
   // ── Reusable selection-ring outline (hidden until hover) ──
   _hoverRingEnt = viewer.entities.add({
     id: '__hover_ring',
@@ -800,7 +1043,8 @@ function initCesium() {
 
       // Populate tooltip
       const h = entry.h;
-      const accentCol = h.bpl ? '#e08830' : '#40c060';
+      const score = riskScore(h);
+      const accentCol = riskHex(score);
       tipAccent.style.background = accentCol;
 
       const inf = (ok, warn) =>
@@ -812,7 +1056,7 @@ function initCesium() {
         <div class="tt-badges">
           <span class="tt-badge ward">W${h.ward_no}</span>
           <span class="tt-badge ${h.bpl ? 'bpl' : 'apl'}">${h.bpl ? 'BPL' : 'APL'}</span>
-          <span class="tt-members">${h.total_members} members</span>
+          <span class="tt-members" style="color:${accentCol}">${riskLabel(score)} · ${score}/100</span>
         </div>
         <div class="tt-grid">
           <div class="tt-row">${inf(h.has_toilet,false)}<span class="tt-lbl">Toilet</span>
@@ -900,26 +1144,8 @@ function _unhighlight3D(houseId) {
 }
 
 function show3DPopup(h) {
-  // Just update the insight panel with this house's detail
-  setInsight(`Household #${h.id} — ${h.head_name}`, `
-    <div class="sg">
-      <div class="sc"><div class="lb">Members</div><div class="vl tl">${h.total_members}</div></div>
-      <div class="sc"><div class="lb">Income</div><div class="vl">₹${(h.annual_income/1000).toFixed(0)}K</div></div>
-      <div class="sc"><div class="lb">Status</div><div class="vl ${h.bpl?'red':'grn'}">${h.bpl?'BPL':'APL'}</div></div>
-      <div class="sc"><div class="lb">Ward</div><div class="vl">${h.ward_no}</div></div>
-    </div>
-    <div class="st">Infrastructure</div>
-    <div class="rl">
-      <div class="ri"><div class="ri-bar ${h.has_toilet?'tl':'red'}"></div><div class="ri-c"><div class="ri-l">Toilet</div><div class="ri-v">${h.has_toilet?'Available':'NOT available'}</div></div></div>
-      <div class="ri"><div class="ri-bar ${h.has_electricity?'tl':'red'}"></div><div class="ri-c"><div class="ri-l">Electricity</div><div class="ri-v">${h.has_electricity?'Connected':'NOT connected'}</div></div></div>
-      <div class="ri"><div class="ri-bar ${h.has_water_supply?'tl':'amb'}"></div><div class="ri-c"><div class="ri-l">Water Supply</div><div class="ri-v">${h.has_water_supply?'Piped':'NOT available'}</div></div></div>
-      <div class="ri"><div class="ri-bar ${h.has_gas?'tl':'amb'}"></div><div class="ri-c"><div class="ri-l">Gas (LPG)</div><div class="ri-v">${h.has_gas?'Connected':'NOT connected'}</div></div></div>
-    </div>
-    <div class="st">Location</div>
-    <div class="rl">
-      <div class="ri"><div class="ri-bar tl"></div><div class="ri-c"><div class="ri-l">${h.address}</div><div class="ri-v">${h.lat.toFixed(6)}, ${h.lng.toFixed(6)}</div></div></div>
-    </div>
-  `);
+  // Unified household detail panel (same as 2D click)
+  showHouseholdInsight(h);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -933,15 +1159,19 @@ function switchView(v) {
   const el3d = document.getElementById('map-3d');
   const label3d = document.getElementById('mode3d-label');
 
+  const toolbar = document.getElementById('map-toolbar');
   if (v === '2d') {
     el2d.classList.remove('view-hidden');
     el3d.classList.add('view-hidden');
     label3d.classList.remove('show');
+    if (toolbar) toolbar.style.display = 'flex';
     setTimeout(() => lmap.invalidateSize(), 50);
   } else {
     el3d.classList.remove('view-hidden');
     el2d.classList.add('view-hidden');
     label3d.classList.add('show');
+    if (toolbar) toolbar.style.display = 'none';
+    const isFirstInit = !viewer;
     if (!viewer) initCesium();
     // Give DOM time to fully show, then resize + render buildings
     setTimeout(() => {
@@ -953,6 +1183,8 @@ function switchView(v) {
           destination: Cesium.Cartesian3.fromDegrees(CENTER[1] - 0.0025, CENTER[0] - 0.001, 400),
           orientation: { heading: Cesium.Math.toRadians(20), pitch: Cesium.Math.toRadians(-40), roll: 0 }
         });
+        // Geo labels are added inside initCesium → fetchAndAddGeoLabels,
+        // but if viewer was already created, we only need them once (they persist).
       }
     }, 150);
   }
@@ -1050,7 +1282,58 @@ function toggleChip(el) {
   const f = el.dataset.f, v = el.dataset.v;
   document.querySelectorAll(`.chip[data-f="${f}"]`).forEach(c => c.classList.remove('on','on-red'));
   if (filters[f] === v) { filters[f] = null; }
-  else { filters[f] = v; el.classList.add(f==='toilet'&&v==='0'?'on-red':'on'); }
+  else { filters[f] = v; el.classList.add(f === 'toilet' && v === '0' ? 'on-red' : 'on'); }
+  // Update badge showing number of active filters
+  const active = Object.values(filters).filter(v => v !== null).length;
+  const badge  = document.getElementById('filter-count');
+  const btn    = document.getElementById('apply-btn');
+  if (badge) { badge.textContent = active; badge.style.display = active > 0 ? 'inline-block' : 'none'; }
+  if (btn)   { btn.classList.remove('applied'); }
+  // No immediate re-render — user must click Apply Filter
+}
+
+function applyFilterBtn() {
+  const h = applyFilters(allHouses);
+  const btn = document.getElementById('apply-btn');
+
+  // ── 2D: fly to filtered bounds ──
+  if (currentView === '2d' && h.length) {
+    const bounds = L.latLngBounds(h.map(x => [x.lat, x.lng])).pad(0.18);
+    lmap.flyToBounds(bounds, { duration: 0.75, easeLinearity: 0.3 });
+  }
+
+  // ── 3D: fly to centroid of filtered houses ──
+  if (currentView === '3d' && viewer && h.length) {
+    const lats = h.map(x => x.lat), lngs = h.map(x => x.lng);
+    const cLat = lats.reduce((a, b) => a + b, 0) / lats.length;
+    const cLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
+    const spread = Math.max(
+      Math.max(...lats) - Math.min(...lats),
+      Math.max(...lngs) - Math.min(...lngs)
+    );
+    const alt = Math.max(150, spread * 80000); // adaptive altitude
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(cLng - 0.001, cLat - 0.0005, alt),
+      orientation: { heading: Cesium.Math.toRadians(20), pitch: Cesium.Math.toRadians(-35), roll: 0 },
+      duration: 1.5,
+      easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT
+    });
+    renderCesium(h);
+  }
+
+  // ── Visual feedback ──
+  if (btn) {
+    btn.classList.add('applied');
+    btn.textContent = `✓ Showing ${h.length} household${h.length !== 1 ? 's' : ''}`;
+    setTimeout(() => {
+      const active = Object.values(filters).filter(v => v !== null).length;
+      btn.textContent = 'Apply Filter';
+      const badge = document.getElementById('filter-count');
+      if (badge) { badge.textContent = active; badge.style.display = active > 0 ? 'inline-block' : 'none'; }
+    }, 2000);
+  }
+
+  // Re-render analysis
   if (activeQ) pickQ(activeQ); else plotDefault();
 }
 
@@ -1068,9 +1351,11 @@ function applyFilters(arr) {
 // ═══════════════════════════════════════════════════════════
 function clearLeaflet() {
   cluster.clearLayers();
-  heatLayer.clearLayers();
+  ambientLayer.clearLayers();
   zoneLayer.clearLayers();
   zoneLabelLayer.clearLayers();
+  gridLayer.clearLayers();
+  if (heatmapLayer) { lmap.removeLayer(heatmapLayer); heatmapLayer = null; }
 }
 
 function circleIcon(color, r) {
@@ -1086,10 +1371,24 @@ function circleIcon(color, r) {
 }
 
 function popup(h) {
+  const score = riskScore(h);
+  const bc    = riskBadgeCls(score);
+  const issues = [
+    !h.has_toilet       && 'No Toilet',
+    !h.has_water_supply && 'No Water',
+    !h.has_electricity  && 'No Electricity',
+    h.bpl               && 'BPL Family',
+    h.total_members > 5 && `Large Family (${h.total_members})`
+  ].filter(Boolean);
   return `<div class="ph">
-    <div class="ph-n">${h.head_name}</div>
-    <div class="ph-a">${h.address} · Ward ${h.ward_no}</div>
-    <div class="ph-g">
+    <div class="ph-header" style="border-left:3px solid ${riskHex(score)};padding-left:9px">
+      <div class="ph-n">${h.head_name}</div>
+      <div class="ph-status">
+        <span class="risk-badge ${bc}">${riskLabel(score)} · ${score}/100</span>
+        <span class="ph-ward">Ward ${h.ward_no}</span>
+      </div>
+    </div>
+    <div class="ph-g" style="margin-top:8px">
       <div class="ph-i"><div class="ph-l">Members</div><div class="ph-v">${h.total_members}</div></div>
       <div class="ph-i"><div class="ph-l">Income</div><div class="ph-v">₹${(h.annual_income/1000).toFixed(0)}K</div></div>
       <div class="ph-i"><div class="ph-l">Status</div><div class="ph-v"><span class="tg ${h.bpl?'bpl':'apl'}">${h.bpl?'BPL':'APL'}</span></div></div>
@@ -1099,19 +1398,46 @@ function popup(h) {
       <div class="ph-i"><div class="ph-l">Water</div><div class="ph-v"><span class="tg ${h.has_water_supply?'y':'n'}">${h.has_water_supply?'YES':'NO'}</span></div></div>
       <div class="ph-i"><div class="ph-l">Gas</div><div class="ph-v"><span class="tg ${h.has_gas?'y':'n'}">${h.has_gas?'YES':'NO'}</span></div></div>
     </div>
+    ${issues.length
+      ? `<div class="ph-issues">
+           <div class="ph-issues-label">Issues</div>
+           ${issues.map(i => `<span class="issue-tag">${i}</span>`).join('')}
+         </div>`
+      : `<div class="ph-ok">✓ All infrastructure covered</div>`}
   </div>`;
 }
 
 function plotLeaflet(houses, colorFn, radiusFn) {
   clearLeaflet();
   if (!radiusFn) radiusFn = h => 5 + h.total_members * 1.5;
+
+  if (mapMode === 'heatmap') {
+    // Use raw total_members as intensity so population weight is accurate
+    const maxMem = Math.max(...houses.map(h => h.total_members), 1);
+    const pts = houses.map(h => {
+      const p = jitterCoord(h);
+      return [p.lat, p.lng, h.total_members / maxMem];
+    });
+    heatmapLayer = L.heatLayer(pts, {
+      radius: 18, blur: 12, maxZoom: 17,
+      max: 1.0, minOpacity: 0.25,
+      gradient: { 0.0: '#166534', 0.2: '#22c55e', 0.45: '#a3e635', 0.6: '#eab308', 0.78: '#f97316', 1.0: '#dc2626' }
+    }).addTo(lmap);
+    if (houses.length) {
+      lmap.fitBounds(L.latLngBounds(houses.map(h=>[h.lat,h.lng])).pad(0.12), { animate: true, duration: 0.6 });
+    }
+    return;
+  }
+
+  // ── Markers mode ──
   houses.forEach(h => {
     const c = colorFn(h);
-    const r = Math.max(5, Math.min(20, radiusFn(h)));
-    // Apply same seeded jitter as 3D so both views show matching scatter
+    const r = Math.max(5, Math.min(22, radiusFn(h)));
     const pos = jitterCoord(h);
     const m = L.marker([pos.lat, pos.lng], { icon: circleIcon(c, r) });
-    m.bindPopup(popup(h), { maxWidth: 280 });
+    m.bindPopup(popup(h), { maxWidth: 300 });
+    // Click → sync right panel with household detail
+    m.on('click', () => showHouseholdInsight(h));
     cluster.addLayer(m);
   });
   if (houses.length) {
@@ -1119,19 +1445,19 @@ function plotLeaflet(houses, colorFn, radiusFn) {
   }
 }
 
-// Soft ambient glow behind each marker — muted, no overlapping blobs
-function addHeatCircles(houses) {
+// Soft ambient glow behind each marker — muted, non-overlapping
+function addAmbientCircles(houses) {
+  if (mapMode === 'heatmap') return; // suppressed when heatmap is active
   houses.forEach(h => {
     const pos = jitterCoord(h);
     const i = Math.min(1, h.total_members / 7);
-    // Softer palette: dusty rose / sand / sage instead of red/amber/teal
     const col = i > 0.7 ? '#c06060' : i > 0.4 ? '#b08040' : '#4a8868';
     L.circle([pos.lat, pos.lng], {
-      radius: 18 + h.total_members * 7,     // 40–60% smaller than before
+      radius: 18 + h.total_members * 7,
       color: col, fillColor: col,
-      fillOpacity: 0.04 + i * 0.06,         // max 0.10 — barely visible, just warmth
-      weight: 0, opacity: 0                  // no stroke on ambient rings
-    }).addTo(heatLayer);
+      fillOpacity: 0.04 + i * 0.06,
+      weight: 0, opacity: 0
+    }).addTo(ambientLayer);
   });
 }
 
@@ -1280,6 +1606,151 @@ function showZoneInsight(z, rank, sev, allZones) {
   `);
 }
 
+// ─────────────────────────────────────────────────────────────
+// GRID DENSITY ENGINE
+// Divides the village bounding box into a COLS×ROWS grid,
+// assigns each household to its cell, computes pop + infra gaps,
+// draws coloured L.rectangle boundaries and populates the panel.
+// ─────────────────────────────────────────────────────────────
+function drawDensityGrid(houses) {
+  gridLayer.clearLayers();
+  _gridCellsCache = [];
+  if (!houses.length) return [];
+
+  const COLS = 3, ROWS = 3;
+
+  // Bounding box using jittered coords (same as heatmap)
+  const jCoords = houses.map(h => jitterCoord(h));
+  const minLat = Math.min(...jCoords.map(p => p.lat));
+  const maxLat = Math.max(...jCoords.map(p => p.lat));
+  const minLng = Math.min(...jCoords.map(p => p.lng));
+  const maxLng = Math.max(...jCoords.map(p => p.lng));
+
+  // Add 5% padding so edge houses don't fall exactly on boundary
+  const padLat = (maxLat - minLat) * 0.05;
+  const padLng = (maxLng - minLng) * 0.05;
+  const sLat = minLat - padLat, eLat = maxLat + padLat;
+  const sLng = minLng - padLng, eLng = maxLng + padLng;
+
+  const dLat = (eLat - sLat) / ROWS;
+  const dLng = (eLng - sLng) / COLS;
+
+  // Build cells
+  const cells = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cellS = sLat + r * dLat,  cellN = cellS + dLat;
+      const cellW = sLng + c * dLng,  cellE = cellW + dLng;
+      const label = String.fromCharCode(65 + r * COLS + c); // A–I
+      const hs = houses.filter((h, i) => {
+        const p = jCoords[i];
+        return p.lat >= cellS && p.lat < cellN && p.lng >= cellW && p.lng < cellE;
+      });
+      const pop      = hs.reduce((s, h) => s + h.total_members, 0);
+      const noToilet = hs.filter(h => !h.has_toilet).length;
+      const noWater  = hs.filter(h => !h.has_water_supply).length;
+      const noElec   = hs.filter(h => !h.has_electricity).length;
+      const bplCount = hs.filter(h => h.bpl).length;
+      cells.push({ label, r, c, s: cellS, n: cellN, w: cellW, e: cellE,
+                   hs, pop, count: hs.length, noToilet, noWater, noElec, bplCount,
+                   cLat: (cellS + cellN) / 2, cLng: (cellW + cellE) / 2 });
+    }
+  }
+
+  const maxPop = Math.max(...cells.map(cx => cx.pop), 1);
+  const sorted = [...cells].sort((a, b) => b.pop - a.pop);
+  _gridCellsCache = sorted;
+
+  cells.forEach(cell => {
+    if (cell.count === 0) return;
+    const intensity = cell.pop / maxPop;
+    const rank = sorted.findIndex(cx => cx.label === cell.label);
+
+    const fillCol = intensity > 0.70 ? '#dc2626'
+                  : intensity > 0.45 ? '#f97316'
+                  : intensity > 0.20 ? '#eab308'
+                  : '#22c55e';
+
+    const rect = L.rectangle([[cell.s, cell.w], [cell.n, cell.e]], {
+      color: fillCol,
+      fillColor: fillCol,
+      fillOpacity: 0.06 + intensity * 0.10,   // max 0.16 — always see tiles
+      weight: intensity > 0.65 ? 1.8 : 1.2,
+      opacity: 0.30 + intensity * 0.40,
+      dashArray: intensity > 0.65 ? null : '5 4'
+    }).addTo(gridLayer);
+
+    rect.on('click', () => showGridZoneInsight(cell, rank + 1, intensity, sorted));
+
+    // Small centroid label (only on top-3 cells by pop)
+    if (rank < 3 && cell.count > 0) {
+      const densityLvl = intensity > 0.65 ? 'HIGH' : intensity > 0.35 ? 'MED' : 'LOW';
+      const lblIcon = L.divIcon({
+        className: '',
+        html: `<div style="
+          background:${fillCol}22;border:1px solid ${fillCol}88;
+          color:${fillCol};padding:2px 5px;border-radius:3px;
+          font:600 9px/1.4 'JetBrains Mono',monospace;
+          white-space:nowrap;pointer-events:none">
+          Zone ${cell.label} · ${densityLvl}
+        </div>`,
+        iconSize: [80, 18],
+        iconAnchor: [40, 9]
+      });
+      L.marker([cell.cLat, cell.cLng], { icon: lblIcon, zIndexOffset: 100, interactive: false })
+        .addTo(gridLayer);
+    }
+  });
+
+  return sorted;
+}
+
+function showGridZoneInsight(cell, rank, intensity, allCells) {
+  const lvl    = intensity > 0.65 ? 'HIGH DENSITY'  : intensity > 0.35 ? 'MEDIUM DENSITY' : 'LOW DENSITY';
+  const lvlCls = intensity > 0.65 ? 'red' : intensity > 0.35 ? 'amb' : 'grn';
+  const infraPct = cell.count
+    ? (((cell.count * 3) - cell.noToilet - cell.noWater - cell.noElec) / (cell.count * 3) * 100).toFixed(0)
+    : 100;
+
+  const issueRows = [
+    { label: 'No Toilet',      count: cell.noToilet, cl: 'red' },
+    { label: 'No Water Supply',count: cell.noWater,  cl: 'amb' },
+    { label: 'No Electricity', count: cell.noElec,   cl: 'red' }
+  ].filter(i => i.count > 0)
+   .map(i => `<div class="ri"><div class="ri-bar ${i.cl}"></div>
+     <div class="ri-c"><div class="ri-l">${i.label}</div>
+     <div class="ri-v">${i.count} of ${cell.count} HH (${cell.count?(i.count/cell.count*100).toFixed(0):0}%)</div></div></div>`)
+   .join('') || `<div class="ri"><div class="ri-bar tl"></div>
+     <div class="ri-c"><div class="ri-l">All infra covered</div><div class="ri-v">No intervention needed</div></div></div>`;
+
+  const houseList = cell.hs
+    .sort((a, b) => b.total_members - a.total_members)
+    .slice(0, 6)
+    .map(h => {
+      const score = riskScore(h);
+      return `<div class="gi">
+        <div class="gn">${h.head_name} — ${h.total_members} members</div>
+        <div class="gr">Ward ${h.ward_no} · ${h.bpl?'BPL':'APL'} · <span class="risk-badge ${riskBadgeCls(score)}">${riskLabel(score)}</span></div>
+      </div>`;
+    }).join('');
+
+  setInsight(`Zone ${cell.label} — ${lvl}`, `
+    <div class="sg">
+      <div class="sc"><div class="lb">Density Rank</div><div class="vl ${lvlCls}">#${rank} of ${allCells.filter(c=>c.count>0).length}</div></div>
+      <div class="sc"><div class="lb">Population</div><div class="vl tl">${cell.pop}</div></div>
+      <div class="sc"><div class="lb">Households</div><div class="vl">${cell.count}</div></div>
+      <div class="sc"><div class="lb">Infra Cover</div><div class="vl ${lvlCls}">${infraPct}%</div></div>
+    </div>
+    <div class="st">Infrastructure Gaps</div>
+    <div class="rl">${issueRows}</div>
+    <div class="st">BPL Families</div>
+    <div class="rl"><div class="ri"><div class="ri-bar amb"></div>
+      <div class="ri-c"><div class="ri-l">BPL households in zone</div>
+      <div class="ri-v">${cell.bplCount} of ${cell.count}</div></div></div></div>
+    ${houseList ? `<div class="st">Households in Zone</div><div class="gl">${houseList}</div>` : ''}
+  `);
+}
+
 function showLegend(items) {
   const el = document.getElementById('legend');
   el.innerHTML = '<h4>Legend</h4>' + items.map(i =>
@@ -1291,31 +1762,202 @@ function showLegend(items) {
 function plotDefault() {
   const h = applyFilters(allHouses);
   drawProblemZones(h);
-  plotLeaflet(h, x => {
-    const sc = (x.has_toilet?1:0)+(x.has_electricity?1:0)+(x.has_water_supply?1:0);
-    if (x.bpl && sc <= 1) return '#c94040';
-    if (x.bpl && sc <= 2) return '#c97a28';
-    if (sc <= 2) return '#b09030';
-    return '#38a86a';
-  }, x => 5 + x.total_members * 1.4);
+  // Use risk score for marker color and size
+  plotLeaflet(h,
+    x => riskHex(riskScore(x)),
+    x => 5 + x.total_members * 1.4 + riskScore(x) * 0.07
+  );
   showLegend([
-    {c:'#c94040',l:'BPL + critical infra gap'},
-    {c:'#c97a28',l:'BPL + partial infra'},
-    {c:'#b09030',l:'Missing infra (APL)'},
-    {c:'#38a86a',l:'Good coverage'}
+    {c:'#e04848', l:'Critical (score > 60)'},
+    {c:'#e0a028', l:'Medium (score 30–60)'},
+    {c:'#40c060', l:'Developed (score < 30)'}
   ]);
+  renderOverview(h);
   if (currentView === '3d') renderCesium(h);
+}
+
+// ═══════════════════════════════════════════════════════════
+// OVERVIEW DASHBOARD — auto-loads on boot and default view
+// ═══════════════════════════════════════════════════════════
+function renderOverview(h) {
+  const total    = h.reduce((s, x) => s + x.total_members, 0);
+  const critical = h.filter(x => riskScore(x) > 60);
+  const medium   = h.filter(x => { const s = riskScore(x); return s >= 30 && s <= 60; });
+  const developed= h.filter(x => riskScore(x) < 30);
+  const avgSize  = h.length ? (total / h.length).toFixed(1) : 0;
+  const densityZones = geoData?.dense_areas?.length || 0;
+  const top5     = [...h].sort((a, b) => riskScore(b) - riskScore(a)).slice(0, 5);
+
+  const critPct = h.length ? (critical.length / h.length * 100).toFixed(0) : 0;
+  const medPct  = h.length ? (medium.length  / h.length * 100).toFixed(0) : 0;
+  const devPct  = h.length ? (developed.length/ h.length* 100).toFixed(0) : 0;
+
+  setInsight('Village Overview — Decision Dashboard', `
+    <div class="sg">
+      <div class="sc"><div class="lb">Population</div><div class="vl tl">${total}</div></div>
+      <div class="sc"><div class="lb">Households</div><div class="vl">${h.length}</div></div>
+      <div class="sc"><div class="lb">Avg Size</div><div class="vl amb">${avgSize}</div></div>
+      <div class="sc"><div class="lb">Critical HH</div><div class="vl red">${critical.length}</div><div class="su">${critPct}% of village</div></div>
+    </div>
+
+    <div class="st">Risk Distribution</div>
+    <div class="risk-summary">
+      <div class="rs-bar">
+        <div class="rs-seg critical"  style="width:${critPct}%"></div>
+        <div class="rs-seg medium"    style="width:${medPct}%"></div>
+        <div class="rs-seg developed" style="width:${devPct}%"></div>
+      </div>
+      <div class="rs-legend">
+        <span><span class="rs-dot critical"></span>Critical ${critical.length}</span>
+        <span><span class="rs-dot medium"></span>Medium ${medium.length}</span>
+        <span><span class="rs-dot developed"></span>Developed ${developed.length}</span>
+      </div>
+    </div>
+
+    <div class="st">Ward Risk Breakdown</div>
+    ${wardRiskTable(h)}
+
+    <div class="st">Top 5 Priority Households</div>
+    <div class="gl">${top5.map(x => {
+      const s = riskScore(x);
+      const missing = [
+        !x.has_toilet       && 'toilet',
+        !x.has_electricity  && 'elec',
+        !x.has_water_supply && 'water'
+      ].filter(Boolean).join(' · ');
+      return `<div class="gi risk-${riskClass(s)}">
+        <div class="gn">${x.head_name}
+          <span class="risk-badge ${riskBadgeCls(s)}" style="float:right;margin-top:-1px">${s}</span>
+        </div>
+        <div class="gr">Ward ${x.ward_no} · ${x.total_members} members${missing ? ' · NO ' + missing : ''}</div>
+      </div>`;
+    }).join('')}</div>
+  `);
+}
+
+function wardRiskTable(houses) {
+  const byWard = {};
+  houses.forEach(h => {
+    const w = h.ward_no;
+    if (!byWard[w]) byWard[w] = { count: 0, pop: 0, scoreSum: 0, critical: 0 };
+    const s = riskScore(h);
+    byWard[w].count++;
+    byWard[w].pop += h.total_members;
+    byWard[w].scoreSum += s;
+    if (s > 60) byWard[w].critical++;
+  });
+  const rows = Object.entries(byWard)
+    .sort((a, b) => (b[1].scoreSum / b[1].count) - (a[1].scoreSum / a[1].count))
+    .map(([w, d]) => {
+      const avg = Math.round(d.scoreSum / d.count);
+      const c   = avg > 60 ? 'hr' : avg >= 30 ? '' : 'hg';
+      return `<tr>
+        <td>Ward ${w}</td>
+        <td class="n">${d.count}</td>
+        <td class="n">${d.pop}</td>
+        <td class="n ${c}">${avg}</td>
+        <td class="n ${d.critical > 0 ? 'hr' : 'hg'}">${d.critical}</td>
+      </tr>`;
+    }).join('');
+  return `<table class="wt"><thead><tr>
+    <th>Ward</th><th>HH</th><th>Pop</th><th>Avg Risk</th><th>Critical</th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// HOUSEHOLD INSIGHT PANEL — unified for 2D click + 3D click
+// Shows risk score breakdown, issues, infra status
+// ═══════════════════════════════════════════════════════════
+function showHouseholdInsight(h) {
+  const score  = riskScore(h);
+  const bc     = riskBadgeCls(score);
+  const cls    = riskCssCls(score);
+
+  const scoreItems = [
+    { name: 'No Toilet',        pts: 30,  has: h.has_toilet },
+    { name: 'No Water Supply',  pts: 25,  has: h.has_water_supply },
+    { name: 'No Electricity',   pts: 20,  has: h.has_electricity },
+    { name: 'BPL Household',    pts: 15,  has: !h.bpl },
+    { name: 'Large Family (>5)',pts: 10,  has: h.total_members <= 5 }
+  ];
+
+  const breakdown = scoreItems.map(item => `
+    <div class="score-row">
+      <span class="sr-name">${item.name}</span>
+      ${item.has
+        ? `<span class="sr-ok">✓ +0</span>`
+        : `<span class="sr-pts">+${item.pts}</span>`}
+    </div>`).join('');
+
+  setInsight(`${h.head_name} — ${riskLabel(score)}`, `
+    <div class="sg">
+      <div class="sc">
+        <div class="lb">Risk Score</div>
+        <div class="vl ${cls}">${score}</div>
+        <div class="su"><span class="risk-badge ${bc}">${riskLabel(score)}</span></div>
+      </div>
+      <div class="sc"><div class="lb">Members</div><div class="vl tl">${h.total_members}</div></div>
+      <div class="sc"><div class="lb">BPL Status</div><div class="vl ${h.bpl?'red':'grn'}">${h.bpl?'BPL':'APL'}</div></div>
+      <div class="sc"><div class="lb">Ward</div><div class="vl">${h.ward_no}</div></div>
+    </div>
+
+    <div class="st">Score Breakdown</div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:16px">
+      ${breakdown}
+      <div class="score-total">
+        <span class="st-label">Total Risk Score</span>
+        <span class="st-val ${cls}">${score}/100</span>
+      </div>
+    </div>
+
+    <div class="st">Infrastructure Status</div>
+    <div class="rl">
+      <div class="ri"><div class="ri-bar ${h.has_toilet?'tl':'red'}"></div>
+        <div class="ri-c"><div class="ri-l">Toilet / Sanitation</div>
+        <div class="ri-v">${h.has_toilet?'Available — no intervention needed':'NOT available — +30 risk points'}</div></div></div>
+      <div class="ri"><div class="ri-bar ${h.has_water_supply?'tl':'amb'}"></div>
+        <div class="ri-c"><div class="ri-l">Water Supply</div>
+        <div class="ri-v">${h.has_water_supply?'Piped connection':'NOT available — +25 risk points'}</div></div></div>
+      <div class="ri"><div class="ri-bar ${h.has_electricity?'tl':'red'}"></div>
+        <div class="ri-c"><div class="ri-l">Electricity</div>
+        <div class="ri-v">${h.has_electricity?'Connected':'NOT connected — +20 risk points'}</div></div></div>
+      <div class="ri"><div class="ri-bar ${h.has_gas?'tl':'amb'}"></div>
+        <div class="ri-c"><div class="ri-l">Gas / LPG</div>
+        <div class="ri-v">${h.has_gas?'Connected':'NOT connected'}</div></div></div>
+    </div>
+
+    <div class="st">Household Details</div>
+    <div class="rl">
+      <div class="ri"><div class="ri-bar tl"></div>
+        <div class="ri-c">
+          <div class="ri-l">${h.address}</div>
+          <div class="ri-v">${h.house_type} · ₹${(h.annual_income/1000).toFixed(0)}K/yr · ${h.lat.toFixed(5)}, ${h.lng.toFixed(5)}</div>
+        </div>
+      </div>
+    </div>
+  `);
+}
+
+// ═══════════════════════════════════════════════════════════
+// MAP MODE TOGGLE
+// ═══════════════════════════════════════════════════════════
+function setMapMode(mode) {
+  mapMode = mode;
+  document.getElementById('btn-markers').classList.toggle('active', mode === 'markers');
+  document.getElementById('btn-heatmap').classList.toggle('active', mode === 'heatmap');
+  // Re-render current view with new mode
+  if (activeQ) pickQ(activeQ); else plotDefault();
 }
 
 // ═══════════════════════════════════════════════════════════
 // CESIUM 3D RENDERING
 // ═══════════════════════════════════════════════════════════
+// Default 3D color = risk score (red/amber/green)
 function cesiumColor(h) {
-  const infraScore = (h.has_toilet?1:0)+(h.has_electricity?1:0)+(h.has_water_supply?1:0)+(h.has_gas?1:0);
-  if (h.bpl && infraScore <= 1) return Cesium.Color.fromCssColorString(C.red).withAlpha(0.85);
-  if (h.bpl || infraScore <= 2) return Cesium.Color.fromCssColorString(C.orange).withAlpha(0.85);
-  if (infraScore === 3) return Cesium.Color.fromCssColorString(C.yellow).withAlpha(0.85);
-  return Cesium.Color.fromCssColorString(C.green).withAlpha(0.85);
+  const s = riskScore(h);
+  if (s > 60) return Cesium.Color.fromCssColorString('#e04848').withAlpha(0.92);
+  if (s >= 30) return Cesium.Color.fromCssColorString('#e0a028').withAlpha(0.92);
+  return Cesium.Color.fromCssColorString('#40c060').withAlpha(0.92);
 }
 
 function cesiumColorForQ(h) {
@@ -1356,15 +1998,17 @@ function jitterCoord(house) {
 // ═══════════════════════════════════════════════════════════
 // 3D BUILDING RENDERER
 // Architecture: 3-layer stack  →  plinth · walls · roof
-// Data viz    : roof colour encodes welfare status
+// Labels      : building name (close-up) + ward area (far view)
+// Data viz    : roof colour encodes risk / query status
 // Scale       : realistic Indian village single/double storey
 // ═══════════════════════════════════════════════════════════
 function renderCesium(houses) {
   if (!viewer) return;
 
-  // Remove all entities EXCEPT the permanent hover-ring (id='__hover_ring')
+  // Remove all entities EXCEPT permanent ones: hover-ring + geo location labels
+  const PERMANENT = new Set(['__hover_ring', '__geo_city', '__geo_suburb']);
   viewer.entities.values
-    .filter(e => e.id !== '__hover_ring')
+    .filter(e => !PERMANENT.has(e.id))
     .forEach(e => viewer.entities.remove(e));
 
   houseEntityMap.clear();
@@ -1379,6 +2023,10 @@ function renderCesium(houses) {
     shadow: Cesium.Color.fromCssColorString('#000000').withAlpha(0.26)
   };
 
+  // ══════════════════════════════════════════════
+  // STEP 1 — Buildings + per-building name label
+  // (Ward labels removed per user request)
+  // ══════════════════════════════════════════════
   houses.forEach(h => {
     const pos     = jitterCoord(h);
     const storeys = h.total_members <= 3 ? 1 : h.total_members <= 6 ? 2 : 3;
@@ -1391,8 +2039,9 @@ function renderCesium(houses) {
     const plinthZ = plinthH / 2;
     const wallZ   = plinthH + wallH / 2;
     const roofZ   = plinthH + wallH + roofThk / 2;
+    const labelZ  = plinthH + wallH + roofThk + 2.2; // floats above roof
 
-    const roofCol  = cesiumColorForQ(h).withAlpha(0.96);
+    const roofCol   = cesiumColorForQ(h).withAlpha(0.96);
     const roofColOL = roofCol.darken(0.3, new Cesium.Color());
 
     // ── (A) Shadow pad ──
@@ -1417,9 +2066,9 @@ function renderCesium(houses) {
     });
     plinthEnt._houseId = h.id;
 
-    // ── (C) Walls — tagged as clickable/hoverable, no label (tooltip replaces it) ──
-    const wallDim  = new Cesium.Cartesian3(fp, fp, wallH);
-    const wallEnt  = viewer.entities.add({
+    // ── (C) Walls ──
+    const wallDim = new Cesium.Cartesian3(fp, fp, wallH);
+    const wallEnt = viewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(pos.lng, pos.lat, wallZ),
       box: {
         dimensions: wallDim.clone(),
@@ -1430,7 +2079,7 @@ function renderCesium(houses) {
     });
     wallEnt._houseId = h.id;
 
-    // ── (D) Roof slab — status colour ──
+    // ── (D) Roof slab — risk / query colour ──
     const roofEnt = viewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(pos.lng, pos.lat, roofZ),
       box: {
@@ -1442,14 +2091,45 @@ function renderCesium(houses) {
     });
     roofEnt._houseId = h.id;
 
-    // ── Register in map for O(1) lookup in hover/click handlers ──
+    // ── (E) Building name label — visible only when camera < 160m ──
+    const score = riskScore(h);
+    const labelColor = score > 60
+      ? Cesium.Color.fromCssColorString('#ff8888')
+      : score >= 30
+        ? Cesium.Color.fromCssColorString('#ffd080')
+        : Cesium.Color.fromCssColorString('#88e8b0');
+
+    const nameEnt = viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(pos.lng, pos.lat, labelZ),
+      label: {
+        // Show first name + ward to keep it readable
+        text: h.head_name.split(' ')[0] + '\nW' + h.ward_no,
+        font: '10px "JetBrains Mono", monospace',
+        fillColor: labelColor,
+        outlineColor: Cesium.Color.fromCssColorString('#060810'),
+        outlineWidth: 2,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        // Only show when very close — avoids clutter from far away
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 160),
+        showBackground: true,
+        backgroundColor: Cesium.Color.fromCssColorString('#060810').withAlpha(0.72),
+        backgroundPadding: new Cesium.Cartesian2(5, 3),
+        scale: 0.85
+      }
+    });
+    nameEnt._houseId = h.id;
+
+    // ── Register in map for O(1) lookup ──
     houseEntityMap.set(h.id, {
       h,
-      wall:       wallEnt,
-      roof:       roofEnt,
+      wall:      wallEnt,
+      roof:      roofEnt,
       pos,
-      wallDim:    wallDim.clone(),   // original dims for restore
-      roofColor:  roofCol.clone(),   // original colour for restore
+      wallDim:   wallDim.clone(),
+      roofColor: roofCol.clone(),
       totalH,
       fp
     });
@@ -1481,24 +2161,55 @@ function pickQ(id) {
 // ═══════ QUESTION HANDLERS ═══════
 
 function qDensity(h) {
+  // Draw grid first so rectangles sit below markers/heatmap
+  const gridCells = drawDensityGrid(h);
   drawProblemZones(h);
-  plotLeaflet(h, x => C.amber, x => 4 + x.total_members * 2);
-  addHeatCircles(h);
-  showLegend([{c:'#c06060',l:'High density'},{c:'#b08040',l:'Medium'},{c:'#4a8868',l:'Low density'}]);
+  plotLeaflet(h, x => riskHex(riskScore(x)), x => 4 + x.total_members * 2);
+  addAmbientCircles(h);
+  showLegend([
+    {c:'#dc2626',l:'Critical (score > 60)'},
+    {c:'#f97316',l:'Medium (30–60)'},
+    {c:'#22c55e',l:'Developed (< 30)'},
+    {c:'#3b82f6',l:'Grid density zones'}
+  ]);
 
-  const wp = wardAgg(h);
-  const tp = h.reduce((s,x)=>s+x.total_members,0);
-  const da = geoData?.dense_areas?.length||0;
+  const tp  = h.reduce((s, x) => s + x.total_members, 0);
+  const wp  = wardAgg(h);
+  const topCells = (gridCells || []).filter(c => c.count > 0).slice(0, 5);
+  const maxCellPop = topCells[0]?.pop || 1;
+  const critHH = h.filter(x => riskScore(x) > 60).length;
+
+  const zoneRows = topCells.map((cell, i) => {
+    const intens  = cell.pop / maxCellPop;
+    const lvl     = intens > 0.65 ? 'HIGH' : intens > 0.35 ? 'MEDIUM' : 'LOW';
+    const lvlCls  = intens > 0.65 ? 'crit' : intens > 0.35 ? 'med' : 'dev';
+    const barCls  = intens > 0.65 ? 'red'  : intens > 0.35 ? 'amb'  : 'grn';
+    return `<div class="ri" style="cursor:pointer"
+        onclick="showGridZoneInsight(_gridCellsCache[${i}],${i+1},${intens.toFixed(3)},_gridCellsCache)">
+      <div class="ri-bar ${barCls}"></div>
+      <div class="ri-c">
+        <div class="ri-l">Zone ${cell.label} — ${cell.pop} people · ${cell.count} HH</div>
+        <div class="ri-v">
+          <span class="risk-badge ${lvlCls}">${lvl}</span>
+          ${cell.noToilet||cell.noWater||cell.noElec
+            ? `<span style="font-size:9px;color:var(--text-secondary);margin-left:6px">
+                ${[cell.noToilet&&'toilet',cell.noWater&&'water',cell.noElec&&'elec'].filter(Boolean).join(' · ')} gaps</span>`
+            : '<span style="font-size:9px;color:#40c060;margin-left:6px">✓ infra OK</span>'}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
   setInsight('Population Density Analysis', `
     <div class="sg">
       <div class="sc"><div class="lb">Total Pop</div><div class="vl tl">${tp}</div></div>
       <div class="sc"><div class="lb">Households</div><div class="vl">${h.length}</div></div>
       <div class="sc"><div class="lb">Avg/House</div><div class="vl amb">${h.length?(tp/h.length).toFixed(1):0}</div></div>
-      <div class="sc"><div class="lb">Dense Zones</div><div class="vl red">${da}</div></div>
+      <div class="sc"><div class="lb">Critical HH</div><div class="vl ${critHH>0?'red':'grn'}">${critHH}</div></div>
     </div>
-    <div class="st">Ward Population</div>${wardPopTable(wp)}
-    <div class="st">Density Grid</div>
-    ${barChart((geoData?.grid_cells||[]).map(c=>({l:c.grid_lat.toFixed(3),v:c.count,mx:Math.max(...(geoData?.grid_cells||[{count:1}]).map(x=>x.count)),cl:c.count>3?'red':c.count>1?'amb':'tl'})))}
+    <div class="st">Top Dense Areas</div>
+    <div class="rl">${zoneRows || '<div class="ri"><div class="ri-c"><div class="ri-l">No data</div></div></div>'}</div>
+    <div class="st">Ward Breakdown</div>${wardPopTable(wp)}
   `);
 }
 
