@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Village Digital Twin — Command Center</title>
+<title>Chinchpur Village Digital Twin — Baseline Survey Dashboard</title>
 
 <!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -157,11 +157,7 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
   font-family: var(--font-mono);
   font-size: 10.5px;
 }
-.top-stat { color: var(--text-muted); display: flex; align-items: center; gap: 5px; opacity: 0; animation: fadeUp .4s ease forwards; }
-.top-stat:nth-child(1) { animation-delay: .2s; }
-.top-stat:nth-child(2) { animation-delay: .3s; }
-.top-stat:nth-child(3) { animation-delay: .4s; }
-.top-stat:nth-child(4) { animation-delay: .5s; }
+.top-stat { color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
 .top-stat b { color: var(--c-teal); font-weight: 600; }
 @keyframes fadeUp { from { opacity:0; transform: translateY(-3px); } to { opacity:1; transform: translateY(0); } }
 
@@ -170,6 +166,11 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
   display: grid;
   grid-template-columns: 300px 1fr 340px;
   height: calc(100vh - 46px);
+  min-width: 800px;
+}
+/* In 3D mode, collapse side panels to give Cesium maximum canvas width */
+.layout.mode-3d {
+  grid-template-columns: 240px 1fr 300px;
 }
 
 /* ═══════ LEFT PANEL ═══════ */
@@ -225,6 +226,7 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
 .q-item[data-sev="warn"].active::before { background: var(--c-yellow); }
 .q-item[data-sev="info"].active::before { background: var(--c-teal); }
 .q-item[data-sev="dens"].active::before { background: var(--c-amber); }
+.q-item[data-sev="plan"].active::before { background: #6c8ef5; }
 
 .q-ico {
   display: inline-flex;
@@ -240,6 +242,7 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
 .q-item[data-sev="warn"] .q-ico { background: var(--c-yellow-soft); color: var(--c-yellow); }
 .q-item[data-sev="info"] .q-ico { background: var(--c-teal-soft); color: var(--c-teal); }
 .q-item[data-sev="dens"] .q-ico { background: var(--c-amber-soft); color: var(--c-amber); }
+.q-item[data-sev="plan"] .q-ico { background: rgba(108,142,245,0.15); color: #6c8ef5; }
 
 .q-txt { font-size: 12.5px; font-weight: 500; color: var(--text-primary); line-height: 1.35; }
 .q-sub { font-size: 10px; color: var(--text-muted); margin-top: 3px; padding-left: 28px; font-family: var(--font-mono); }
@@ -304,8 +307,8 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
 /* ═══════ CENTER — MAP/3D ═══════ */
 .center { position: relative; background: var(--bg-root); overflow: hidden; }
 
-#map-2d { position: absolute; inset: 0; z-index: 1; transition: opacity .4s ease; }
-#map-3d { position: absolute; inset: 0; z-index: 1; transition: opacity .4s ease; }
+#map-2d { position: absolute; inset: 0; z-index: 1; transition: opacity .2s ease-out; }
+#map-3d { position: absolute; inset: 0; z-index: 1; transition: opacity .2s ease-out; }
 .view-hidden { opacity: 0; pointer-events: none !important; z-index: 0 !important; }
 
 /* Leaflet realistic map — OSM tiles, no filter distortion */
@@ -354,7 +357,7 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
   box-shadow: 0 2px 12px rgba(0,0,0,0.14);
   opacity: 0;
   transform: translateY(8px);
-  transition: all .3s ease;
+  transition: opacity .15s ease-out, transform .15s ease-out;
   pointer-events: none;
 }
 .legend.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
@@ -373,7 +376,7 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
   background: rgba(6,8,16,0.88);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 14px;
-  transition: opacity .4s;
+  transition: opacity .15s ease-out;
 }
 .loading-overlay.gone { opacity: 0; pointer-events: none; }
 .spinner { width: 30px; height: 30px; border: 2px solid var(--border); border-top-color: var(--c-teal); border-radius: 50%; animation: spin .7s linear infinite; }
@@ -399,20 +402,49 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
   color: var(--text-muted);
 }
 #insight-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 5px; line-height: 1.3; }
-#insight-body { flex: 1; overflow-y: auto; padding: 14px 16px; }
+#insight-body { flex: 1; overflow-y: auto; padding: 14px 16px; transition: opacity .15s ease, transform .15s ease; }
+#insight-body.fading { opacity: 0; transform: translateY(5px); }
+
+/* ── Back navigation row ── */
+#back-row {
+  display: none;
+  align-items: center; gap: 8px;
+  padding: 8px 16px 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: -1px;         /* overlap the .right-head border */
+}
+#back-btn {
+  display: flex; align-items: center; gap: 4px;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-body); font-size: 12px; font-weight: 600;
+  color: var(--text-muted); padding: 3px 6px; border-radius: 5px;
+  transition: background .12s, color .12s;
+  flex-shrink: 0;
+}
+#back-btn:hover { background: var(--bg-card); color: var(--text-primary); }
+#back-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.panel-crumb {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11.5px; color: var(--text-muted);
+  overflow: hidden; white-space: nowrap;
+  min-width: 0;
+}
+.crumb-sep { opacity: .45; flex-shrink: 0; }
+.crumb-home { font-weight: 500; flex-shrink: 0; }
+.crumb-active { color: var(--text-primary); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
 
 /* ─── Insight Components ─── */
 .sg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 16px; }
 .sc {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 10px 12px;
-  opacity: 0; animation: slideUp .35s ease forwards;
+  opacity: 1; transform: translateY(0);
+  will-change: opacity, transform;
+  transition: opacity 0.15s ease-in, transform 0.15s ease-in;
 }
-.sc:nth-child(1) { animation-delay: .05s; }
-.sc:nth-child(2) { animation-delay: .1s; }
-.sc:nth-child(3) { animation-delay: .15s; }
-.sc:nth-child(4) { animation-delay: .2s; }
-@keyframes slideUp { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: translateY(0); } }
+.sc.entering { opacity: 0; transform: translateY(4px); }
+@keyframes slideUp { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: translateY(0); } }
 .sc .lb { font-family: var(--font-mono); font-size: 8.5px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
 .sc .vl { font-family: var(--font-mono); font-size: 20px; font-weight: 700; line-height: 1; }
 .sc .vl.red { color: var(--c-red); }
@@ -438,15 +470,14 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
 /* Reason list */
 .rl { margin-bottom: 16px; }
 .ri {
-  background: var(--bg-card); border: 1px solid var(--border);
+  background: var(--bg-card); border: 1px solid var(--border); animation: none;
   border-radius: var(--radius); padding: 8px 12px;
   margin-bottom: 4px; display: flex; align-items: center; gap: 10px;
-  opacity: 0; animation: slideUp .3s ease forwards;
+  opacity: 1; transform: translateY(0);
+  will-change: opacity, transform;
+  transition: opacity 0.15s ease-in, transform 0.15s ease-in;
 }
-.ri:nth-child(1) { animation-delay: .05s; }
-.ri:nth-child(2) { animation-delay: .12s; }
-.ri:nth-child(3) { animation-delay: .19s; }
-.ri:nth-child(4) { animation-delay: .26s; }
+.ri.entering { opacity: 0; transform: translateY(4px); }
 .ri-bar { width: 2.5px; height: 24px; border-radius: 2px; flex-shrink: 0; }
 .ri-bar.red { background: var(--c-red); }
 .ri-bar.amb { background: var(--c-amber); }
@@ -682,6 +713,92 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
   position: absolute; left: -1px; top: 0; bottom: 0;
   width: 3px; border-radius: 3px 0 0 3px;
 }
+
+/* ═══════ VILLAGE INSIGHTS & SIMULATION ═══════ */
+.ri-bar.grn { background: var(--c-green); }
+.ri-bar.blue { background: var(--c-blue); }
+
+/* Zone labels on the map */
+.vz-label {
+  background: rgba(6,8,16,0.88);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-primary);
+  border-width: 1px;
+  border-style: solid;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+/* Facility markers */
+.fac-marker {
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.6);
+  cursor: pointer;
+}
+
+/* Simulation button */
+.sim-btn {
+  width: 100%; padding: 10px 14px;
+  background: linear-gradient(135deg, var(--c-teal), #1aa090);
+  border: none; border-radius: var(--radius);
+  color: white; font-family: var(--font-mono);
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase;
+  cursor: pointer; margin-top: 14px;
+  transition: opacity .15s, transform .1s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.sim-btn:hover { opacity: .88; transform: translateY(-1px); }
+.sim-btn:active { transform: translateY(0); }
+.sim-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+.sim-reset-btn {
+  width: 100%; padding: 8px 14px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text-secondary);
+  font-family: var(--font-mono); font-size: 10px;
+  font-weight: 600; cursor: pointer; margin-top: 6px;
+  letter-spacing: 1px; text-transform: uppercase;
+  transition: border-color .15s, color .15s;
+}
+.sim-reset-btn:hover { border-color: var(--c-amber); color: var(--c-amber); }
+
+/* Success banner */
+.sim-success {
+  background: var(--c-green-soft); border: 1px solid rgba(64,192,96,0.3);
+  border-radius: var(--radius); padding: 10px 12px;
+  margin-top: 12px; display: flex; align-items: center; gap: 8px;
+  font-size: 11.5px; color: var(--c-green);
+}
+
+/* Cable polyline glow animation (SVG path via class) */
+@keyframes cablePulse {
+  0%, 100% { opacity: 0.9; }
+  50%       { opacity: 0.5; }
+}
+.cable-anim path { animation: cablePulse 1.8s ease-in-out infinite; }
+
+/* ═══════ MOBILE / RESPONSIVE ═══════ */
+@media (max-width: 768px) {
+  .sg { grid-template-columns: 1fr 1fr; gap: 4px; }
+  .sc { padding: 8px 10px; }
+  .sc .vl { font-size: 17px; }
+  #insight-body { padding: 10px 12px; padding-bottom: env(safe-area-inset-bottom, 10px); }
+  .right-head { padding: 10px 12px 8px; }
+  #back-btn { min-height: 44px; padding: 8px 10px; }
+}
+@media (max-width: 480px) {
+  .sg { grid-template-columns: 1fr; }
+  .ri { padding: 10px 12px; min-height: 44px; }
+}
 </style>
 </head>
 <body>
@@ -704,8 +821,8 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
   <!-- LEFT -->
   <div class="left">
     <div class="left-head">
-      <h2>Analysis Queries</h2>
-      <p>Select a question to drive map visualization</p>
+      <h2>Analysis</h2>
+      <p>Click a question to visualize it on the map</p>
     </div>
     <div class="q-list" id="q-list"></div>
     <div class="filters">
@@ -723,8 +840,8 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
     <div id="map-3d" class="view-hidden"></div>
     <!-- Map mode toggle — only visible in 2D -->
     <div class="map-toolbar" id="map-toolbar">
-      <button class="mt-btn active" id="btn-markers" onclick="setMapMode('markers')">◉ Markers</button>
-      <button class="mt-btn" id="btn-heatmap" onclick="setMapMode('heatmap')">◎ Heatmap</button>
+      <button class="mt-btn" id="btn-markers" onclick="setMapMode('markers')">◉ Markers</button>
+      <button class="mt-btn active" id="btn-heatmap" onclick="setMapMode('heatmap')">◎ Heatmap</button>
     </div>
     <div class="legend" id="legend"></div>
     <div class="mode-3d-label" id="mode3d-label"><span class="dot3d"></span> 3D Digital Twin</div>
@@ -737,10 +854,20 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
   <div class="right">
     <div class="right-head">
       <h2>Insight Panel</h2>
-      <div id="insight-title">Select a question to begin</div>
+      <div id="insight-title">Village Overview</div>
+      <!-- Back navigation — shown only when a detail item is selected -->
+      <div id="back-row">
+        <button id="back-btn" onclick="goBack()" title="Back to dashboard">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+        <div class="panel-crumb" id="panel-crumb">
+          <span class="crumb-home">Home</span>
+        </div>
+      </div>
     </div>
     <div id="insight-body">
-      <div class="empty"><div class="ei">◈</div><h3>No analysis active</h3><p>Choose a question from the left to see population insights and ward breakdowns</p></div>
+      <div class="empty"><div class="ei" style="font-size:28px">⌛</div><h3>Loading data…</h3><p>Connecting to village database</p></div>
     </div>
   </div>
 
@@ -757,12 +884,402 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
 // CONFIG
 // ═══════════════════════════════════════════════════════════
 const API = 'http://localhost:8080/api/v1';
-const CENTER = [18.507, 73.808];
+const CENTER = [18.498, 73.812]; // centroid of pentagon ward layout
 const C = {
   red:'#e04848', orange:'#e08830', yellow:'#d4b030',
   green:'#40c060', teal:'#28c0a8', blue:'#3888e0',
   amber:'#e0a028', gray:'#4a5a6a', purple:'#8868d0'
 };
+// Human-readable area names for each ward number
+const WARD_NAMES = {
+  1: 'Chinchpur North',
+  2: 'Chinchpur South',
+  3: 'Dhangarwadi',
+  4: 'Shivneri Tola',
+  5: 'Ambedkar Nagar'
+};
+
+// ═══════════════════════════════════════════════════════════
+// VILLAGE SURVEY DATA — based on Annexure F Baseline Survey
+// Realistic dummy data for Chinchpur village, Mulshi Block, Pune
+// ═══════════════════════════════════════════════════════════
+const VILLAGE_SURVEY = {
+  // Section 0: Basic Info
+  basic: {
+    name: 'Chinchpur',
+    district: 'Pune',
+    block: 'Mulshi',
+    gp: 'Chinchpur Gram Panchayat',
+    lgd_code: '568423',
+    state: 'Maharashtra',
+    lat: CENTER[0],
+    lng: CENTER[1],
+    total_households: 80,
+    total_population: 358
+  },
+
+  // Section 1: Drinking Water (Rural Water Supply Dept, ZP)
+  water: {
+    sufficient_sources: true,
+    sources: ['Bore wells (3)', 'Open well (2)', 'Public tap stand (4)'],
+    functional_scheme: true,
+    scheme_name: 'Jal Jeevan Mission — FHTC',
+    total_hh: 80,
+    hh_with_tap: 56,
+    hh_without_tap: 24,
+    water_tanks: 2,
+    tanks_cleaned_regularly: true,
+    plan: 'Extend pipeline from main tank to Ward 4 & 5 (24 HH). Estimated cost: ₹8.5L under JJM.',
+    challenges: ['Low pressure in Ward 4 during summer', 'Ageing pipes in Ward 2 need replacement']
+  },
+
+  // Section 2: Sanitation (SBM, ZP)
+  sanitation: {
+    total_schools: 2,
+    total_anganwadis: 2,
+    schools_with_toilets: 2,
+    anganwadis_with_toilets: 1,
+    anganwadis_need_toilets: 1,
+    anganwadi_names_need_toilet: ['Shivneri Tola AWC'],
+    hh_without_toilet: 28,
+    hh_eligible_sbm: 22,
+    hh_not_eligible_sbm: 6,
+    waste_system: 'Door-to-door collection by GP worker, partial segregation',
+    slwm_plan: false,
+    plastic_waste_system: 'Monthly collection by taluka recycler',
+    plastic_free_target: true,
+    plastic_free_timeline: '2027',
+    challenges: ['No composting pit for wet waste', 'Open dumping near Ward 3 nala', 'Lack of awareness on segregation']
+  },
+
+  // Section 3: Internal Roads & Drainage
+  roads_drainage: {
+    total_internal_road_m: 4200,
+    total_drain_length_m: 1800,
+    drain_to_construct_m: 2400,
+    paved_road_m: 2520,
+    unpaved_road_m: 1680,
+    paved_pct: 60,
+    cc_road_m: 1500,
+    brick_topped_m: 1020,
+    road_to_construct_m: 1680,
+    connected_by_all_weather: true,
+    streetlight_total_m: 4200,
+    streetlight_with_m: 2800,
+    streetlight_without_m: 1400,
+    drainage_challenges: ['Waterlogging in Ward 3 during monsoon', 'No drainage in Ward 5', 'Open drain overflow near school']
+  },
+
+  // Section 4: Agriculture
+  agriculture: {
+    total_land_ha: 320,
+    irrigated_ha: 120,
+    non_irrigated_ha: 200,
+    major_crops: ['Rice', 'Jowar', 'Groundnut', 'Vegetables'],
+    avg_yield_quintal: { rice: 22, jowar: 12, groundnut: 8 },
+    irrigation_sources: ['Canal (40%)', 'Bore wells (35%)', 'Rain-fed (25%)'],
+    water_scarcity: true,
+    modern_techniques: { drip: 12, organic: 5, total_farmers: 65 },
+    challenges: ['Erratic rainfall', 'Low market price for jowar', 'Pest attacks on groundnut'],
+    soil_health_cards: 38,
+    total_farmers: 65
+  },
+
+  // Section 5: Animal Husbandry
+  animal_husbandry: {
+    total_livestock: { cattle: 120, goats: 85, poultry: 340, buffalo: 45 },
+    primary_activities: ['Dairy (50 HH)', 'Poultry (18 HH)', 'Goat rearing (25 HH)'],
+    vet_services: false,
+    nearest_vet: { name: 'Paud Veterinary Hospital', distance_km: 12 },
+    challenges: ['No veterinary services in village', 'Fodder shortage in summer', 'Lumpy skin disease risk'],
+    avg_income_livestock: 28000
+  },
+
+  // Section 6: MSRLM — Livelihoods
+  msrlm: {
+    total_shgs: 8,
+    total_members: 96,
+    active_shgs: 6,
+    activities: ['Dairy processing', 'Papad & pickle making', 'Tailoring unit'],
+    households_benefited: 52,
+    impact: 'Average HH income increased ₹12,000/yr through SHG activities'
+  },
+
+  // Section 7: Anganwadi
+  anganwadi: {
+    total: 2,
+    with_own_building: 1,
+    to_construct: 1,
+    locations_needed: ['Shivneri Tola (Ward 4)'],
+    enrolled_children: 45,
+    attending_regularly: 32,
+    sam_children: 3,
+    mam_children: 8,
+    challenges: ['Low attendance in Ward 4 — no AWC building', 'Insufficient nutrition supplies']
+  },
+
+  // Section 8: Social Infrastructure
+  social_infra: {
+    community_hall: 1,
+    community_center: 0,
+    mpc: 0,
+    temple_open_space: 2,
+    needs: ['Community center for Ward 4-5', 'Multipurpose hall renovation']
+  },
+
+  // Section 9: Public Distribution
+  pds: {
+    fair_price_shop: true,
+    lpg_agency: { name: 'HP Gas — Paud Agency', distance_km: 8 }
+  },
+
+  // Section 10: Post Office
+  post_office: {
+    main_post_office: false,
+    nearest_main: { name: 'Paud Post Office', distance_km: 10 },
+    sub_post_office: true
+  },
+
+  // Section 11: Rural Roads
+  rural_roads: {
+    connected_all_weather: true,
+    st_bus_service: true,
+    nearest_railway: { name: 'Kamshet Railway Station', distance_km: 18 },
+    private_transport: { auto: 5, two_wheeler_taxi: 3 }
+  },
+
+  // Section 12: Market
+  market: {
+    nearest_apmc: { name: 'Paud APMC', distance_km: 10 },
+    weekly_market: { name: 'Wednesday Bazaar', location: 'Village Chowk' },
+    nearest_market: { name: 'Paud Market', distance_km: 10 }
+  },
+
+  // Section 14: Electricity & Clean Fuel
+  electricity: {
+    village_electrified: true,
+    total_hh: 80,
+    hh_with_electricity: 60,
+    hh_without_electricity: 20,
+    streetlight_coverage_pct: 67,
+    road_with_streetlight_m: 2800,
+    road_without_streetlight_m: 1400,
+    challenges: ['Frequent power cuts (4-6 hrs/day in summer)', 'No electricity in 20 HH in Ward 4 & 5', 'Transformer overloaded'],
+    lpg_hh: 52,
+    no_lpg_hh: 28
+  },
+
+  // Section 15: Digitalization
+  digital: {
+    internet_available: true,
+    connection_type: '4G (Jio, Airtel)',
+    csc_available: false,
+    nearest_csc: { name: 'Paud CSC', distance_km: 10 }
+  },
+
+  // Section 16: Sports
+  sports: {
+    ground_available: true,
+    facilities: ['Kabaddi ground', 'Volleyball court (no net)'],
+    needs: ['Basketball court', 'Sports equipment', 'Boundary wall for ground']
+  },
+
+  // Section 17: Education
+  education: {
+    schools: [
+      { name: 'ZP Primary School Chinchpur', type: 'Primary (1-4)', students: 68, teachers: 3, ratio: '23:1', has_toilet: true, has_library: false, has_internet: false },
+      { name: 'ZP Upper Primary School', type: 'Upper Primary (5-7)', students: 42, teachers: 2, ratio: '21:1', has_toilet: true, has_library: true, has_internet: false }
+    ],
+    total_enrollment: 110,
+    dropout_rate_pct: 8,
+    literacy_rate_pct: 72,
+    literacy_male_pct: 82,
+    literacy_female_pct: 63,
+    pre_matric_scholars: 18,
+    navodaya_selected: 1,
+    challenges: ['No digital learning tools', 'Teacher shortage', 'Girls dropout after Class 7']
+  },
+
+  // Section 18: Banking
+  banking: {
+    nearest_bank: { name: 'SBI Paud Branch', distance_km: 10 },
+    nearest_coop: { name: 'Mulshi Sahakari Bank', distance_km: 8 }
+  },
+
+  // Section 19: Village Institutions
+  institutions: {
+    milk_collection: true,
+    shgs: 8,
+    farmer_groups: 2,
+    women_groups: [{ name: 'Savitribai Mahila Mandal', members: 24 }, { name: 'Jijau Bachat Gat', members: 18 }],
+    youth_groups: [{ name: 'Chinchpur Yuva Manch', members: 15 }]
+  },
+
+  // Section 20: Health
+  health: {
+    nearest_hospital: { name: 'Sub-District Hospital Paud', distance_km: 10 },
+    nearest_phc: { name: 'PHC Lavale', distance_km: 6 },
+    phc_needs_upgrade: true,
+    phc_upgrade_details: 'Need X-ray machine, additional doctor, medicine stock',
+    nearest_sub_centre: { name: 'Sub-centre Chinchpur', distance_km: 0 },
+    sub_centre_needs_upgrade: true,
+    sub_centre_upgrade_details: 'Repair roof, add BP monitor, weighing scale',
+    challenges: ['No doctor in sub-centre after 2 PM', 'Emergency cases require 10km travel', 'No ambulance coverage']
+  },
+
+  // Section 21: Other Facilities
+  other_facilities: {
+    grocery_shops: 4,
+    flour_mills: 1,
+    barber_shops: 1,
+    vegetable_shops: 2,
+    private_clinics: 0,
+    nursing_homes: 0
+  },
+
+  // Section 22: ICDS
+  icds: {
+    awc_needing_repair: 1,
+    children_0_6_enrolled: 45,
+    children_attending: 32,
+    sam_children: 3,
+    mam_children: 8,
+    vcdc_conducted: true,
+    last_vcdc_date: '2026-01-15',
+    pre_school_active: true,
+    growth_monitoring_tools: true,
+    left_out_hamlets: ['Shivneri Tola — no AWC within walking distance']
+  },
+
+  // Section 23: Soil & Water Conservation
+  soil_water: {
+    farm_ponds: 4,
+    nala_bunds: 2,
+    check_dams: 1,
+    wells_needing_recharge: 8,
+    lakes_needing_desilting: 1,
+    rainfed_hh: 35,
+    active_projects: ['PoCRA — 3 farm ponds', 'Jalyukta Shivar — nala deepening'],
+    priority_works: ['Lake desilting (est. ₹12L)', 'New check dam near Ward 3', 'Contour bunding on 40 ha']
+  },
+
+  // Section 24: Gram Panchayat Office
+  gp_office: {
+    own_building: true,
+    has_electricity: true,
+    has_toilet: true,
+    has_drinking_water: true,
+    needs_renovation: true,
+    renovation_details: 'Roof repair, digital room setup, solar panel installation'
+  },
+
+  // Section 25: Graveyards
+  graveyards: { count: 2, conditions: ['Boundary wall needed for Hindu cemetery', 'Muslim graveyard pathway repair'] },
+
+  // Section 26: Community Halls
+  community_halls: { count: 1, conditions: ['Roof leaking — needs repair', 'No toilet facility', 'Electricity connection intermittent'] },
+
+  // Section 27: Anganwadi Centers (detailed)
+  awc_details: [
+    { name: 'AWC Chinchpur Main', building: 'Own', condition: 'Good', water: true, toilet: true, electricity: true },
+    { name: 'AWC Shivneri Tola', building: 'Rented', condition: 'Poor', water: false, toilet: false, electricity: true }
+  ],
+
+  // Section 28: Schools (detailed)
+  school_details: [
+    { name: 'ZP Primary School', building_condition: 'Fair', classrooms: 4, needs: 'Library room, compound wall, drinking water filter' },
+    { name: 'ZP Upper Primary', building_condition: 'Good', classrooms: 3, needs: 'Computer lab, internet connectivity, sports equipment' }
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════
+// SEED HOUSEHOLDS — 80 realistic households based on survey
+// Fields: id, head_name, ward_no, lat, lng, total_members,
+//   house_type, annual_income, bpl, has_toilet, has_water_supply,
+//   has_electricity, has_gas, has_drainage, waste_mgmt, water_source,
+//   root_cause (auto-computed)
+// ═══════════════════════════════════════════════════════════
+const SEED_HOUSES = (() => {
+  const names = [
+    'Ramesh Jadhav','Sunita Pawar','Vijay Shinde','Anita Bhosale','Suresh Gaikwad',
+    'Kavita More','Mohan Deshmukh','Priya Kale','Arjun Waghmare','Lakshmi Patil',
+    'Ganesh Thorat','Meera Salve','Ravi Chavan','Sonal Ahire','Dinesh Wagh',
+    'Usha Fatak','Prakash Ghule','Nanda Lokhande','Yogesh Ektare','Tara Ovhal',
+    'Balu Mane','Savitri Dhere','Ashok Kadam','Mangal Borate','Tanaji Kumbhar',
+    'Suman Nikam','Raju Shete','Pushpa Jagtap','Dattu Gavhane','Kanta Devkate',
+    'Mahadev Sonawane','Rekha Thombre','Pandurang Gade','Shobha Ingale','Narayan Mulik',
+    'Annapurna Waghole','Subhash Kharat','Vimal Sawant','Bapu Phadke','Jyoti Kasar',
+    'Dashrath Shirke','Lata Bandgar','Hanumant Dalvi','Sakubai Parab','Bhimrao Kamble',
+    'Chandrakala Ghate','Tulshiram Londhe','Sarojini Mhaske','Vithal Tupe','Sangita Dhavale',
+    'Pandit Surve','Kusumbai Autade','Uttam Jedhe','Vandana Takalkar','Raghunath Phalke',
+    'Nirmala Galande','Trimbak Dhumal','Indubai Nalawade','Shankar Khade','Sunanda Ubale',
+    'Ganpat Pagare','Parubai Bhujbal','Nilesh Aware','Shanta Ghodke','Balasaheb Bagul',
+    'Mandabai Hivale','Devram Sable','Alka Munde','Yashwant Raut','Hemalata Gangurde',
+    'Dagdu Valunj','Sindhu Shingade','Eknath Memane','Taramati Veer','Krishna Bhandare',
+    'Chhaya Desale','Sambhaji Mohite','Rukmini Yadav','Namdev Sarode','Parvati Rankhambe'
+  ];
+
+  const addresses = [
+    'Near Hanuman Temple','Main Road, Chinchpur','Behind School','Near Bore Well',
+    'Opposite GP Office','Near Milk Center','Farm House Road','Temple Chowk',
+    'Near Bus Stop','Shivneri Tola Main'
+  ];
+
+  const houses = [];
+  const wardConfig = {
+    1: { n: 18, baseLat: CENTER[0]+0.003,  baseLng: CENTER[1]-0.004, toiletPct: 0.78, elecPct: 0.89, waterPct: 0.83, bplPct: 0.22, drainPct: 0.72 },
+    2: { n: 16, baseLat: CENTER[0]-0.002,  baseLng: CENTER[1]-0.003, toiletPct: 0.75, elecPct: 0.81, waterPct: 0.75, bplPct: 0.31, drainPct: 0.56 },
+    3: { n: 16, baseLat: CENTER[0]-0.004,  baseLng: CENTER[1]+0.003, toiletPct: 0.63, elecPct: 0.75, waterPct: 0.69, bplPct: 0.44, drainPct: 0.38 },
+    4: { n: 15, baseLat: CENTER[0]+0.002,  baseLng: CENTER[1]+0.005, toiletPct: 0.47, elecPct: 0.60, waterPct: 0.53, bplPct: 0.53, drainPct: 0.20 },
+    5: { n: 15, baseLat: CENTER[0]-0.001,  baseLng: CENTER[1]+0.008, toiletPct: 0.40, elecPct: 0.53, waterPct: 0.47, bplPct: 0.60, drainPct: 0.13 }
+  };
+
+  let id = 1;
+  Object.entries(wardConfig).forEach(([ward, cfg]) => {
+    for (let i = 0; i < cfg.n; i++) {
+      const seed = id * 127.1 + 311.7;
+      const r = (n) => { const x = Math.sin(n) * 43758.5453; return x - Math.floor(x); };
+
+      const bpl = r(seed + 1) < cfg.bplPct;
+      const hasToilet = r(seed + 2) < cfg.toiletPct;
+      const hasElec   = r(seed + 3) < cfg.elecPct;
+      const hasWater  = r(seed + 4) < cfg.waterPct;
+      const hasDrain  = r(seed + 5) < cfg.drainPct;
+      const hasGas    = r(seed + 6) < (bpl ? 0.35 : 0.75);
+      const members   = Math.floor(3 + r(seed + 7) * 5);
+      const income    = bpl
+        ? Math.floor(30000 + r(seed + 8) * 50000)
+        : Math.floor(80000 + r(seed + 9) * 150000);
+      const houseType = bpl && r(seed + 10) < 0.55 ? 'Kuccha' : 'Pucca';
+
+      const waterSources = ['Tap','Bore well','Open well','Tanker','Hand pump'];
+      const wasteMgmt = ['Door-to-door','Self-disposal','Open dumping','Composting'];
+
+      houses.push({
+        id,
+        head_name: names[(id - 1) % names.length],
+        address: addresses[Math.floor(r(seed + 11) * addresses.length)] + ', Ward ' + ward,
+        ward_no: Number(ward),
+        lat: cfg.baseLat + (r(seed + 12) - 0.5) * 0.005,
+        lng: cfg.baseLng + (r(seed + 13) - 0.5) * 0.005,
+        total_members: members,
+        house_type: houseType,
+        annual_income: income,
+        bpl,
+        has_toilet: hasToilet,
+        has_water_supply: hasWater,
+        has_electricity: hasElec,
+        has_gas: hasGas,
+        has_drainage: hasDrain,
+        water_source: waterSources[Math.floor(r(seed + 14) * waterSources.length)],
+        waste_mgmt: wasteMgmt[Math.floor(r(seed + 15) * wasteMgmt.length)],
+        // Root cause will be computed dynamically
+      });
+      id++;
+    }
+  });
+  return houses;
+})();
 
 // ═══════════════════════════════════════════════════════════
 // RISK SCORE ENGINE
@@ -784,15 +1301,216 @@ function riskHex(score)   { return score > 60 ? '#e04848'  : score >= 30 ? '#e0a
 function riskCssCls(score){ return score > 60 ? 'red'      : score >= 30 ? 'amb'      : 'grn'; }
 function riskBadgeCls(score){ return score > 60 ? 'crit'   : score >= 30 ? 'med'      : 'dev'; }
 
+// ── ROOT CAUSE DETECTION ENGINE ──
+// Analyzes WHY a household lacks infrastructure and returns structured causes
+function detectRootCauses(h) {
+  const causes = [];
+  if (!h.has_toilet) {
+    if (h.bpl) causes.push({ issue: 'No Toilet', cause: 'BPL — cannot afford construction', solution: 'SBM(G) toilet grant ₹12,000', scheme: 'Swachh Bharat Mission', priority: 'high' });
+    else if (h.house_type === 'Kuccha') causes.push({ issue: 'No Toilet', cause: 'Kuccha structure — no permanent base', solution: 'PMAY pucca house + attached toilet', scheme: 'PMAY-G', priority: 'high' });
+    else causes.push({ issue: 'No Toilet', cause: 'Awareness gap — eligible but unapplied', solution: 'GP awareness drive + SBM application', scheme: 'SBM(G)', priority: 'medium' });
+  }
+  if (!h.has_water_supply) {
+    if (h.ward_no >= 4) causes.push({ issue: 'No Water', cause: 'Pipeline not extended to this ward', solution: 'JJM pipeline extension (₹8.5L est.)', scheme: 'Jal Jeevan Mission', priority: 'high' });
+    else causes.push({ issue: 'No Water', cause: 'Damaged/ageing pipeline connection', solution: 'Repair piped connection under JJM', scheme: 'Jal Jeevan Mission', priority: 'medium' });
+  }
+  if (!h.has_electricity) {
+    if (h.ward_no >= 4) causes.push({ issue: 'No Electricity', cause: 'Far from nearest transformer/pole', solution: 'MSEDCL pole extension + new connection', scheme: 'Saubhagya / DDUGJY', priority: 'high' });
+    else causes.push({ issue: 'No Electricity', cause: 'Application pending / metering issue', solution: 'Fast-track MSEDCL connection', scheme: 'Saubhagya', priority: 'medium' });
+  }
+  if (!h.has_drainage) {
+    causes.push({ issue: 'No Drainage', cause: 'Open drain / no drain line in area', solution: 'Construct pucca drain under 15th FC / MGNREGA', scheme: '15th Finance Commission', priority: h.ward_no >= 4 ? 'high' : 'medium' });
+  }
+  if (!h.has_gas) {
+    if (h.bpl) causes.push({ issue: 'No LPG', cause: 'BPL — cost barrier for refills', solution: 'Ujjwala Yojana enrollment + subsidy', scheme: 'PMUY', priority: 'medium' });
+  }
+  return causes;
+}
+
+// Summary: aggregate root causes across a set of houses
+function aggregateRootCauses(houses) {
+  const causeMap = {};
+  houses.forEach(h => {
+    detectRootCauses(h).forEach(c => {
+      const key = c.issue + '|' + c.cause;
+      if (!causeMap[key]) causeMap[key] = { ...c, count: 0, affected_pop: 0 };
+      causeMap[key].count++;
+      causeMap[key].affected_pop += h.total_members;
+    });
+  });
+  return Object.values(causeMap).sort((a, b) => b.count - a.count);
+}
+
+// ═══════════════════════════════════════════════════════════
+// INFRASTRUCTURE SCENARIO DATA
+// Two detailed, relational plans with household-level breakdowns,
+// spatial routing, and network connections for SLWM + Electricity
+// ═══════════════════════════════════════════════════════════
+
+const SANITATION_PLAN = {
+  // ── House Pair ──
+  houseA: {
+    id: 32,  head: 'Prasad Khedkar',  ward: 3,  area: 'Dhangarwadi',
+    lat: 18.5005,  lng: 73.8078,
+    category: 'APL',  house_type: 'Pucca',  members: 5,
+    toilet: true,  toilet_type: 'Twin-pit',  sbm_beneficiary: true,  sbm_id: 'SBM/MH/PUN/MUL/2019/3247',
+    wasteSystem: 'Twin-pit toilet (Pit-A active, Pit-B sealed). Grey-water exits via 4-inch PVC pipe to an open kuccha drain running along the south side of the lane. The drain flows 85m east into a seasonal nallah.',
+    currentState: 'functional'
+  },
+  houseB: {
+    id: 38,  head: 'Shirish Nimbalkar',  ward: 3,  area: 'Dhangarwadi',
+    lat: 18.5008,  lng: 73.8065,
+    category: 'BPL',  house_type: 'Semi-Pucca',  members: 6,
+    toilet: false,
+    rootCause: 'Tenant on Gairan (government grazing) land — title dispute. GP has not issued Occupancy Certificate, so the SBM(G) application was rejected in 2021. Family currently uses a shared community toilet 220m away near the Hanuman Temple.',
+    landIssue: true,
+    currentPractice: 'Open defecation (monsoon) + community toilet (dry season, 220m walk).'
+  },
+  communityToilet: { lat: 18.4988, lng: 73.8092, distance_m: 220, condition: 'Partial — 2 of 4 seats functional, no water supply' },
+
+  // ── Proposed Plan ──
+  proposal: {
+    title: 'SLWM Integrated Toilet + Biogas + Drainage Plan',
+    scheme: 'SBM(G)-II Phase 2 + 15th Finance Commission',
+    estimatedCost: 185000,  // ₹1,85,000 total
+    timeline_months: 4,
+    steps: [
+      { step: 1, action: 'GP resolution to reclassify 12 sq.m plot behind House B as residential (Gairan conversion)', timeline: 'Month 1', cost: 0 },
+      { step: 2, action: 'Construct twin-pit toilet for House B under SBM(G)-II (₹12,000 incentive + ₹8,000 GP top-up)', timeline: 'Month 2', cost: 20000 },
+      { step: 3, action: 'Lay 65m closed PVC drain pipe from House B toilet to shared biogas unit', timeline: 'Month 2-3', cost: 42000 },
+      { step: 4, action: 'Install 2 m³ biogas digester shared between House A + B (feeds 2 kitchens)', timeline: 'Month 3', cost: 65000 },
+      { step: 5, action: 'Route treated effluent 120m via covered drain to village soak pit at SLWM site', timeline: 'Month 3-4', cost: 58000 }
+    ]
+  },
+
+  // ── Physical Routing (lat/lng nodes) ──
+  nodes: {
+    toilet_B:       { lat: 18.50085, lng: 73.80635, z: 0,  type: 'toilet',     label: 'Proposed Toilet (House B)' },
+    pipe_jn1:       { lat: 18.50075, lng: 73.80650, z:-0.5,type: 'pipe_jn',    label: 'Pipe Junction 1' },
+    pipe_jn2:       { lat: 18.50060, lng: 73.80665, z:-0.5,type: 'pipe_jn',    label: 'Pipe Junction 2' },
+    biogas_unit:    { lat: 18.50045, lng: 73.80680, z: 0,  type: 'biogas',     label: 'Shared 2m³ Biogas Digester' },
+    toilet_A_out:   { lat: 18.50040, lng: 73.80770, z:-0.3,type: 'pipe_jn',    label: 'House A greywater outlet' },
+    drain_jn1:      { lat: 18.50020, lng: 73.80700, z:-0.5,type: 'drain_jn',   label: 'Covered Drain Start' },
+    drain_jn2:      { lat: 18.49980, lng: 73.80720, z:-0.5,type: 'drain_jn',   label: 'Drain crosses lane' },
+    drain_jn3:      { lat: 18.49940, lng: 73.80740, z:-0.5,type: 'drain_jn',   label: 'Drain parallel to road' },
+    slwm_site:      { lat: 18.49880, lng: 73.80760, z: 0,  type: 'slwm',       label: 'Village SLWM Treatment Site' }
+  },
+  // Pipe connections (from → to, with pipe spec)
+  connections: [
+    { from: 'toilet_B',     to: 'pipe_jn1',     pipe: '4" PVC closed',   length_m: 18 },
+    { from: 'pipe_jn1',     to: 'pipe_jn2',     pipe: '4" PVC closed',   length_m: 22 },
+    { from: 'pipe_jn2',     to: 'biogas_unit',   pipe: '4" PVC closed',   length_m: 25 },
+    { from: 'toilet_A_out', to: 'biogas_unit',   pipe: '4" PVC closed',   length_m: 90, note: 'existing open drain replaced' },
+    { from: 'biogas_unit',  to: 'drain_jn1',     pipe: '6" RCC covered',  length_m: 22 },
+    { from: 'drain_jn1',    to: 'drain_jn2',     pipe: '6" RCC covered',  length_m: 48 },
+    { from: 'drain_jn2',    to: 'drain_jn3',     pipe: '6" RCC covered',  length_m: 45 },
+    { from: 'drain_jn3',    to: 'slwm_site',     pipe: '6" RCC covered',  length_m: 65 }
+  ]
+};
+
+const ELECTRICITY_PLAN = {
+  // ── Zone Definition ──
+  zone1: {
+    name: 'Zone 1 — Main Village',  wards: [1, 2, 3],
+    description: 'Original settlement with 11kV feeder from Mulshi sub-station. Distribution transformer (100 kVA, 1992) at Ward 3 south edge. LT overhead lines on wooden poles serve 41 HH. 34 have active connections (83%).',
+    transformer: { lat: 18.4940, lng: 73.8070, capacity_kva: 100, year: 1992, label: 'DT-1 (100 kVA)' },
+    hh_total: 41,  hh_electrified: 34
+  },
+  zone2: {
+    name: 'Zone 2 — New Settlement',  wards: [4, 5],
+    description: 'Post-2010 expansion on revenue land south of the nallah. 23 HH, only 16 electrified (70%) via illegal hookups from Zone 1 DT-1 — voltage drops below 180V at peak, causing motor burnout. MSEDCL has issued disconnection notices for unauthorized tapping.',
+    rootCause: 'No distribution transformer exists south of the nallah. The seasonal nallah (15m wide, 3m deep in monsoon) acts as a geographical barrier. MSEDCL\'s 2018 survey flagged the crossing as requiring an 11kV river-crossing span, but budget was diverted to Maval block.',
+    obstacles: [
+      { type: 'nallah', label: 'Seasonal Nallah (15m wide)', lat1: 18.4870, lng1: 73.7950, lat2: 18.4870, lng2: 73.8140 },
+      { type: 'agri_field', label: 'Paddy fields (200m stretch)', lat1: 18.4855, lng1: 73.7940, lat2: 18.4840, lng2: 73.7925 }
+    ],
+    hh_total: 23,  hh_electrified: 16
+  },
+
+  // ── Proposed Plan ──
+  proposal: {
+    title: '11kV Line Extension + New 63 kVA DT for Zone 2',
+    scheme: 'Saubhagya (DDUGJY Phase-II) + MSEDCL Rural Electrification',
+    estimatedCost: 1850000,  // ₹18,50,000
+    timeline_months: 8,
+    steps: [
+      { step: 1, action: 'MSEDCL survey + DPR for 11kV extension from DT-1 south', timeline: 'Month 1-2', cost: 50000 },
+      { step: 2, action: 'Install 14 new 9m PSC poles (60m spacing) from DT-1 to nallah', timeline: 'Month 3-4', cost: 420000 },
+      { step: 3, action: 'River-crossing span: 2 tall steel poles (12m) with 45m ACSR conductor over nallah', timeline: 'Month 4-5', cost: 380000 },
+      { step: 4, action: 'Install 8 poles through agricultural fields (easement acquired via GP)', timeline: 'Month 5-6', cost: 240000 },
+      { step: 5, action: 'Erect new 63 kVA pole-mounted DT at Ward 4/5 junction', timeline: 'Month 6-7', cost: 350000 },
+      { step: 6, action: 'LT network: 6 additional LT poles + service lines to 23 HH', timeline: 'Month 7-8', cost: 410000 }
+    ]
+  },
+
+  // ── Pole Routing (physical path from DT-1 to DT-2) ──
+  poles: [
+    { id: 'DT1',     lat: 18.4940, lng: 73.8070, z: 0,  type: 'transformer', label: 'DT-1 (100 kVA)', height_m: 6,  material: 'Concrete pad' },
+    { id: 'pole_1',  lat: 18.4928, lng: 73.8060, z: 0,  type: 'pole',        label: 'Pole 1 (PSC 9m)',  height_m: 9,  material: 'PSC' },
+    { id: 'pole_2',  lat: 18.4916, lng: 73.8050, z: 0,  type: 'pole',        label: 'Pole 2 (PSC 9m)',  height_m: 9,  material: 'PSC' },
+    { id: 'pole_3',  lat: 18.4904, lng: 73.8040, z: 0,  type: 'pole',        label: 'Pole 3 (PSC 9m)',  height_m: 9,  material: 'PSC' },
+    { id: 'pole_4',  lat: 18.4892, lng: 73.8030, z: 0,  type: 'pole',        label: 'Pole 4 (PSC 9m)',  height_m: 9,  material: 'PSC' },
+    { id: 'pole_5',  lat: 18.4884, lng: 73.8022, z: 0,  type: 'pole',        label: 'Pole 5 (PSC 9m)',  height_m: 9,  material: 'PSC' },
+    { id: 'pole_6',  lat: 18.4878, lng: 73.8016, z: 0,  type: 'pole',        label: 'Pole 6 (PSC 9m)',  height_m: 9,  material: 'PSC' },
+    { id: 'pole_7',  lat: 18.4876, lng: 73.8012, z: 0,  type: 'pole',        label: 'Pole 7 (PSC 9m)',  height_m: 9,  material: 'PSC' },
+    // ── Nallah crossing: 2 tall steel poles ──
+    { id: 'pole_N1', lat: 18.4873, lng: 73.8005, z: 0,  type: 'river_pole',  label: 'Nallah Pole N1 (Steel 12m)', height_m: 12, material: 'Tubular steel', note: 'North bank' },
+    { id: 'pole_N2', lat: 18.4867, lng: 73.7995, z: 0,  type: 'river_pole',  label: 'Nallah Pole N2 (Steel 12m)', height_m: 12, material: 'Tubular steel', note: 'South bank' },
+    // ── Through agricultural fields ──
+    { id: 'pole_8',  lat: 18.4858, lng: 73.7985, z: 0,  type: 'pole',        label: 'Pole 8 (PSC 9m)',  height_m: 9,  material: 'PSC', note: 'Paddy field edge' },
+    { id: 'pole_9',  lat: 18.4848, lng: 73.7972, z: 0,  type: 'pole',        label: 'Pole 9 (PSC 9m)',  height_m: 9,  material: 'PSC' },
+    { id: 'pole_10', lat: 18.4838, lng: 73.7960, z: 0,  type: 'pole',        label: 'Pole 10 (PSC 9m)', height_m: 9,  material: 'PSC' },
+    { id: 'pole_11', lat: 18.4826, lng: 73.7950, z: 0,  type: 'pole',        label: 'Pole 11 (PSC 9m)', height_m: 9,  material: 'PSC' },
+    { id: 'pole_12', lat: 18.4814, lng: 73.7940, z: 0,  type: 'pole',        label: 'Pole 12 (PSC 9m)', height_m: 9,  material: 'PSC' },
+    { id: 'pole_13', lat: 18.4802, lng: 73.7928, z: 0,  type: 'pole',        label: 'Pole 13 (PSC 9m)', height_m: 9,  material: 'PSC' },
+    { id: 'pole_14', lat: 18.4790, lng: 73.7918, z: 0,  type: 'pole',        label: 'Pole 14 (PSC 9m)', height_m: 9,  material: 'PSC' },
+    // ── New Distribution Transformer ──
+    { id: 'DT2',     lat: 18.4778, lng: 73.7910, z: 0,  type: 'transformer', label: 'DT-2 (63 kVA, proposed)', height_m: 7, material: 'Pole-mount' }
+  ],
+  // Sequential pole-to-pole conductor connections
+  conductors: [
+    { from: 'DT1',     to: 'pole_1',  conductor: '11kV ACSR Dog',  span_m: 155 },
+    { from: 'pole_1',  to: 'pole_2',  conductor: '11kV ACSR Dog',  span_m: 150 },
+    { from: 'pole_2',  to: 'pole_3',  conductor: '11kV ACSR Dog',  span_m: 150 },
+    { from: 'pole_3',  to: 'pole_4',  conductor: '11kV ACSR Dog',  span_m: 150 },
+    { from: 'pole_4',  to: 'pole_5',  conductor: '11kV ACSR Dog',  span_m: 100 },
+    { from: 'pole_5',  to: 'pole_6',  conductor: '11kV ACSR Dog',  span_m: 80  },
+    { from: 'pole_6',  to: 'pole_7',  conductor: '11kV ACSR Dog',  span_m: 50  },
+    { from: 'pole_7',  to: 'pole_N1', conductor: '11kV ACSR Dog',  span_m: 80  },
+    { from: 'pole_N1', to: 'pole_N2', conductor: '11kV ACSR Dog (river span)', span_m: 120, note: '45m clearance above nallah bed' },
+    { from: 'pole_N2', to: 'pole_8',  conductor: '11kV ACSR Dog',  span_m: 120 },
+    { from: 'pole_8',  to: 'pole_9',  conductor: '11kV ACSR Dog',  span_m: 160 },
+    { from: 'pole_9',  to: 'pole_10', conductor: '11kV ACSR Dog',  span_m: 155 },
+    { from: 'pole_10', to: 'pole_11', conductor: '11kV ACSR Dog',  span_m: 150 },
+    { from: 'pole_11', to: 'pole_12', conductor: '11kV ACSR Dog',  span_m: 150 },
+    { from: 'pole_12', to: 'pole_13', conductor: '11kV ACSR Dog',  span_m: 155 },
+    { from: 'pole_13', to: 'pole_14', conductor: '11kV ACSR Dog',  span_m: 150 },
+    { from: 'pole_14', to: 'DT2',     conductor: '11kV ACSR Dog',  span_m: 145 }
+  ],
+  // Nallah line for rendering as obstacle
+  nallah: { lat1: 18.4872, lng1: 73.7920, lat2: 18.4868, lng2: 73.8140, width_m: 15, label: 'Seasonal Nallah' }
+};
+
 // ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
 let allHouses=[], govData=null, welfareData=null, geoData=null, statsData=null;
 let activeQ=null, currentView='2d';
 let filters = { bpl:null, toilet:null, ward:null };
-let mapMode = 'markers';   // 'markers' | 'heatmap'
+let mapMode = 'heatmap';   // 'markers' | 'heatmap'  — default heatmap ON
 let heatmapLayer = null;   // L.heatLayer from leaflet.heat plugin
 let _gridCellsCache = [];  // last computed grid cells — used by panel onclick
+
+// ── Village insights + simulation state ──
+let _villageState = {
+  eastImproved: false,   // has electricity simulation been applied?
+};
+let _villageLayers = {
+  zones: null,       // L.featureGroup — east/west electricity circles + labels
+  roads: null,       // L.featureGroup — paved/unpaved polylines
+  facilities: null,  // L.featureGroup — school/hospital markers
+  cable: null        // L.polyline — animated connection cable (null when hidden)
+};
 
 // ═══════════════════════════════════════════════════════════
 // LEAFLET INIT
@@ -813,8 +1531,9 @@ const cluster = L.markerClusterGroup({
     return L.divIcon({ html: '<div>'+n+'</div>', className: 'marker-cluster marker-cluster-'+sz, iconSize: L.point(34,34) });
   }
 });
-// Layer order: grid (bottom) → zones → cluster markers → ambient circles → zone labels (top)
+// Layer order: grid (bottom) → village layers → zones → cluster markers → ambient circles → zone labels (top)
 const gridLayer      = L.layerGroup().addTo(lmap);  // density grid rectangles
+const villageLayer   = L.layerGroup().addTo(lmap);  // village insights layers (roads, zones, facilities)
 const zoneLayer      = L.layerGroup().addTo(lmap);  // ward-level problem zones
 lmap.addLayer(cluster);
 const ambientLayer   = L.layerGroup().addTo(lmap);  // per-house soft ambient circles
@@ -945,6 +1664,7 @@ function initCesium() {
 
   // ── Add satellite layer as base ──
   viewer.imageryLayers.addImageryProvider(satelliteLayer);
+  window._cesiumViewer = viewer;  // expose for debugging
 
   const scene = viewer.scene;
   const globe  = scene.globe;
@@ -981,22 +1701,30 @@ function initCesium() {
   try { scene.postProcessStages.fxaa.enabled = true; } catch(e) {}
 
   // ── Camera: 40° tilt, SE heading, village-framing altitude ──
-  // Offset camera behind-and-left so all 50 houses fill the forward view
+  // Use actual ward centroid from loaded houses so camera always frames the data
+  const _initHouses = allHouses.length ? allHouses : SEED_HOUSES;
+  const _cLat = _initHouses.reduce((s,h)=>s+h.lat,0) / _initHouses.length;
+  const _cLng = _initHouses.reduce((s,h)=>s+h.lng,0) / _initHouses.length;
+  // Initial camera: sit south of the village, looking north so flyTo has
+  // a reasonable starting point. flyTo() in _doResize() handles final framing.
   viewer.camera.setView({
     destination: Cesium.Cartesian3.fromDegrees(
-      CENTER[1] - 0.0025,   // slightly west
-      CENTER[0] - 0.0010,   // slightly south
-      400                   // 400m altitude — close enough to read building detail
+      _cLng,
+      _cLat - 0.045,   // south enough to show full 5km ward spread at -55° pitch
+      8000             // 8km — overview altitude that fits 5km-spread wards
     ),
     orientation: {
-      heading: Cesium.Math.toRadians(20),    // slight NNE heading
-      pitch:   Cesium.Math.toRadians(-40),   // 40° below horizontal
+      heading: Cesium.Math.toRadians(0),
+      pitch:   Cesium.Math.toRadians(-55),
       roll:    0
     }
   });
 
   // ── Fetch real location name from Nominatim and add geo labels ──
   fetchAndAddGeoLabels();
+
+  // ── Ensure first render fires even if canvas was just created ──
+  viewer.scene.requestRender();
 
   // ── Reusable selection-ring outline (hidden until hover) ──
   _hoverRingEnt = viewer.entities.add({
@@ -1017,44 +1745,68 @@ function initCesium() {
   const tip      = document.getElementById('twin-tip');
   const tipAccent = document.getElementById('tt-accent');
 
-  // ── HOVER: highlight + tooltip ──
+  // ── HOVER: highlight buildings + pillar tooltip ──
   handler.setInputAction(mv => {
-    const picked = scene.pick(mv.endPosition);
+    const picked  = scene.pick(mv.endPosition);
+    const eid     = Cesium.defined(picked) && picked.id ? (picked.id.id || '') : '';
     const houseId = (Cesium.defined(picked) && picked.id && picked.id._houseId != null)
                     ? picked.id._houseId : null;
 
+    const cx = mv.endPosition.x, cy = mv.endPosition.y;
+    const vpW = viewer.canvas.clientWidth;
+
+    // ── Hovering a PILLAR ──
+    if (eid.startsWith('__pillar_')) {
+      if (_hoveredHouseId !== null) { _unhighlight3D(_hoveredHouseId); _hoveredHouseId = null; }
+      const wardNo   = eid.replace('__pillar_', '').split('_')[0];
+      const areaName = WARD_NAMES[wardNo] || `Ward ${wardNo}`;
+      const wh = applyFilters(allHouses).filter(h => String(h.ward_no) === wardNo);
+      const pop = wh.reduce((s, h) => s + h.total_members, 0);
+      const crit = wh.filter(h => riskScore(h) > 60).length;
+      const avgR = wh.length ? Math.round(wh.reduce((s,h) => s+riskScore(h), 0)/wh.length) : 0;
+      const col  = avgR > 60 ? '#e04848' : avgR >= 30 ? '#e0a028' : '#40c060';
+      tip.style.left    = (cx + 16 > vpW - 240 ? cx - 245 : cx + 16) + 'px';
+      tip.style.top     = Math.max(8, cy - 10) + 'px';
+      tip.style.display = 'block';
+      tip.innerHTML = `
+        <div class="tt-cursor-line" style="background:${col}"></div>
+        <div class="tt-name">${areaName}</div>
+        <div class="tt-badges">
+          <span class="tt-badge ward">${wh.length} HH</span>
+          <span class="tt-members" style="color:${col}">${pop} people</span>
+        </div>
+        <div class="tt-grid">
+          <div class="tt-row"><div class="tt-dot" style="background:${col}"></div>
+            <span class="tt-lbl">Avg Risk</span><span class="tt-val" style="color:${col}">${avgR}/100</span></div>
+          <div class="tt-row"><div class="tt-dot tt-no"></div>
+            <span class="tt-lbl">Critical HH</span><span class="tt-val" style="color:#e04848">${crit}</span></div>
+        </div>
+        <div style="font-size:9px;color:#6a7a8e;margin-top:6px;text-align:center">Click to zoom into this area</div>`;
+      return;
+    }
+
+    // ── Hovering a BUILDING ──
     if (houseId !== null) {
       const entry = houseEntityMap.get(houseId);
       if (!entry) return;
-
-      // Highlight building if newly entered
       if (_hoveredHouseId !== houseId) {
         if (_hoveredHouseId !== null) _unhighlight3D(_hoveredHouseId);
         _highlight3D(houseId, entry);
         _hoveredHouseId = houseId;
       }
-
-      // Position tooltip near cursor (flip left if near right edge)
-      const cx = mv.endPosition.x, cy = mv.endPosition.y;
-      const vpW = viewer.canvas.clientWidth;
       tip.style.left    = (cx + 16 > vpW - 240 ? cx - 245 : cx + 16) + 'px';
       tip.style.top     = Math.max(8, cy - 10) + 'px';
       tip.style.display = 'block';
-
-      // Populate tooltip
       const h = entry.h;
       const score = riskScore(h);
       const accentCol = riskHex(score);
-      tipAccent.style.background = accentCol;
-
       const inf = (ok, warn) =>
         `<div class="tt-dot ${ok ? 'tt-ok' : warn ? 'tt-warn' : 'tt-no'}"></div>`;
-
       tip.innerHTML = `
         <div class="tt-cursor-line" id="tt-accent" style="background:${accentCol}"></div>
         <div class="tt-name">${h.head_name}</div>
         <div class="tt-badges">
-          <span class="tt-badge ward">W${h.ward_no}</span>
+          <span class="tt-badge ward">${WARD_NAMES[h.ward_no]||'W'+h.ward_no}</span>
           <span class="tt-badge ${h.bpl ? 'bpl' : 'apl'}">${h.bpl ? 'BPL' : 'APL'}</span>
           <span class="tt-members" style="color:${accentCol}">${riskLabel(score)} · ${score}/100</span>
         </div>
@@ -1069,29 +1821,113 @@ function initCesium() {
             <span class="tt-val" style="color:${h.has_gas?'#28c0a8':'#e0a028'}">${h.has_gas?'YES':'NO'}</span></div>
         </div>`;
     } else {
-      // Mouse not on any building
-      if (_hoveredHouseId !== null) {
-        _unhighlight3D(_hoveredHouseId);
-        _hoveredHouseId = null;
-      }
+      if (_hoveredHouseId !== null) { _unhighlight3D(_hoveredHouseId); _hoveredHouseId = null; }
       tip.style.display = 'none';
     }
   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-  // ── CLICK: right panel + fly-to ──
+  // ── CLICK: handle both pillar (far) and building (close) clicks ──
   handler.setInputAction(click => {
     const picked = scene.pick(click.position);
-    if (!Cesium.defined(picked) || !picked.id || picked.id._houseId == null) return;
+    if (!Cesium.defined(picked) || !picked.id) return;
+
+    const eid = picked.id.id || '';   // string entity id
+
+    // ─── PILLAR CLICK: fly into the ward and show ward summary ───
+    if (eid.startsWith('__pillar_')) {
+      const wardNo = eid.replace('__pillar_', '').split('_')[0];
+      const wardHouses = applyFilters(allHouses).filter(
+        h => String(h.ward_no) === wardNo
+      );
+      if (!wardHouses.length) return;
+
+      // STATE: hide pillars immediately — blocks must not render while pillar is visible
+      _hidePillars();
+      _fromPillar = true;
+
+      // Compute centroid of actual jittered coords (same as buildings)
+      const jCoords = wardHouses.map(h => jitterCoord(h));
+      const cLat = jCoords.reduce((s, p) => s + p.lat, 0) / jCoords.length;
+      const cLng = jCoords.reduce((s, p) => s + p.lng, 0) / jCoords.length;
+
+      // Fly directly to ward centroid at building-visible altitude (~600m)
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(cLng, cLat, 620),
+        orientation: {
+          heading: Cesium.Math.toRadians(0),
+          pitch:   Cesium.Math.toRadians(-45),
+          roll:    0
+        },
+        duration: 1.8,
+        easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT
+      });
+      viewer.selectedEntity = undefined;
+
+      // Pre-compute all stats before the delay
+      const pop      = wardHouses.reduce((s, h) => s + h.total_members, 0);
+      const critical = wardHouses.filter(h => riskScore(h) > 60);
+      const noToilet = wardHouses.filter(h => !h.has_toilet).length;
+      const noWater  = wardHouses.filter(h => !h.has_water_supply).length;
+      const noElec   = wardHouses.filter(h => !h.has_electricity).length;
+      const bplCount = wardHouses.filter(h => h.bpl).length;
+      const avgRisk  = Math.round(wardHouses.reduce((s, h) => s + riskScore(h), 0) / wardHouses.length);
+      const areaName = WARD_NAMES[wardNo] || `Ward ${wardNo}`;
+      const sevCls   = avgRisk > 60 ? 'red' : avgRisk >= 30 ? 'amb' : 'grn';
+
+      const houseRows = [...wardHouses]
+        .sort((a, b) => riskScore(b) - riskScore(a))
+        .slice(0, 5)
+        .map(h => {
+          const s = riskScore(h);
+          return `<div class="gi risk-${riskClass(s)}">
+            <div class="gn">${h.head_name}
+              <span class="risk-badge ${riskBadgeCls(s)}" style="float:right">${s}</span>
+            </div>
+            <div class="gr">${h.total_members} members · ${h.bpl?'BPL':'APL'} · ${h.house_type}</div>
+          </div>`;
+        }).join('');
+
+      // STATE: wait 200ms for pillar fade-out, then show data blocks
+      setTimeout(() => {
+        setDetailInsight(`${areaName} — Ward Overview`, `
+          <div class="sg">
+            <div class="sc"><div class="lb">Population</div><div class="vl tl">${pop}</div></div>
+            <div class="sc"><div class="lb">Households</div><div class="vl">${wardHouses.length}</div></div>
+            <div class="sc"><div class="lb">Avg Risk</div><div class="vl ${sevCls}">${avgRisk}</div></div>
+            <div class="sc"><div class="lb">Critical HH</div><div class="vl red">${critical.length}</div></div>
+          </div>
+          <div class="st">Infrastructure Gaps</div>
+          <div class="rl">
+            <div class="ri"><div class="ri-bar red"></div>
+              <div class="ri-c"><div class="ri-l">No Toilet</div>
+              <div class="ri-v">${noToilet} of ${wardHouses.length} households (${Math.round(noToilet/wardHouses.length*100)}%)</div></div></div>
+            <div class="ri"><div class="ri-bar amb"></div>
+              <div class="ri-c"><div class="ri-l">No Water Supply</div>
+              <div class="ri-v">${noWater} of ${wardHouses.length} households (${Math.round(noWater/wardHouses.length*100)}%)</div></div></div>
+            <div class="ri"><div class="ri-bar red"></div>
+              <div class="ri-c"><div class="ri-l">No Electricity</div>
+              <div class="ri-v">${noElec} of ${wardHouses.length} households (${Math.round(noElec/wardHouses.length*100)}%)</div></div></div>
+            <div class="ri"><div class="ri-bar amb"></div>
+              <div class="ri-c"><div class="ri-l">BPL Families</div>
+              <div class="ri-v">${bplCount} of ${wardHouses.length} households</div></div></div>
+          </div>
+          <div class="st">Top Priority Households</div>
+          <div class="gl">${houseRows}</div>
+        `, areaName);
+      }, 200);
+      return;
+    }
+
+    // ─── BUILDING CLICK: existing individual household behavior ───
+    if (picked.id._houseId == null) return;
 
     const entry = houseEntityMap.get(picked.id._houseId);
     if (!entry) return;
 
-    // Update right panel
     show3DPopup(entry.h);
 
-    // Zoom smoothly to the clicked building
     const { pos, totalH, fp } = entry;
-    const dist = fp * 6 + totalH * 2;   // proportional orbit distance
+    const dist = fp * 6 + totalH * 2;
     viewer.camera.flyTo({
       destination: Cesium.Cartesian3.fromDegrees(
         pos.lng - 0.0002, pos.lat - 0.0001, Math.max(80, dist)
@@ -1160,33 +1996,65 @@ function switchView(v) {
   const label3d = document.getElementById('mode3d-label');
 
   const toolbar = document.getElementById('map-toolbar');
+  const layout  = document.querySelector('.layout');
   if (v === '2d') {
     el2d.classList.remove('view-hidden');
     el3d.classList.add('view-hidden');
     label3d.classList.remove('show');
     if (toolbar) toolbar.style.display = 'flex';
+    if (layout) layout.classList.remove('mode-3d');
     setTimeout(() => lmap.invalidateSize(), 50);
   } else {
     el3d.classList.remove('view-hidden');
     el2d.classList.add('view-hidden');
     label3d.classList.add('show');
     if (toolbar) toolbar.style.display = 'none';
+    if (layout) layout.classList.add('mode-3d');
     const isFirstInit = !viewer;
     if (!viewer) initCesium();
-    // Give DOM time to fully show, then resize + render buildings
-    setTimeout(() => {
-      if (viewer) {
-        viewer.resize();
+
+    // ── Multi-stage resize: container needs a full paint cycle before Cesium
+    // knows its real pixel dimensions. 150ms is not always enough (slow machines,
+    // first load). We resize at 150ms, 400ms, and 800ms to guarantee the canvas
+    // fills the column correctly.
+    const _doResize = (rerender) => {
+      if (!viewer) return;
+      const div = document.getElementById('map-3d');
+      // Force the canvas to match its container
+      viewer.canvas.style.width  = div.clientWidth  + 'px';
+      viewer.canvas.style.height = div.clientHeight + 'px';
+      viewer.resize();
+      viewer.scene.requestRender();
+      if (rerender) {
         renderCesium(applyFilters(allHouses));
-        // Re-frame camera to village after resize
-        viewer.camera.setView({
-          destination: Cesium.Cartesian3.fromDegrees(CENTER[1] - 0.0025, CENTER[0] - 0.001, 400),
-          orientation: { heading: Cesium.Math.toRadians(20), pitch: Cesium.Math.toRadians(-40), roll: 0 }
+        // Use flyTo so Cesium auto-computes bounding sphere regardless of canvas size.
+        // Only frame the ward-level pillar entities (ids starting with __pillar_[digit])
+        // to avoid buildings (which are at ground level) pulling the camera too close.
+        const pillarEnts = viewer.entities.values.filter(e => /^__pillar_\d$/.test(e.id));
+        const collection = new Cesium.EntityCollection();
+        pillarEnts.forEach(e => collection.add(e));
+        viewer.flyTo(pillarEnts, {
+          offset: new Cesium.HeadingPitchRange(
+            Cesium.Math.toRadians(15),   // heading — slight NNE so wards spread into view
+            Cesium.Math.toRadians(-55),  // pitch — steep down to fit wide spread in narrow canvas
+            10000                         // range: far enough to frame 5km ward spread
+          ),
+          duration: 1.2
+        }).catch(() => {
+          // Fallback: manual setView at centroid
+          const _h = allHouses.length ? allHouses : SEED_HOUSES;
+          const _cl = _h.reduce((s,x)=>s+x.lat,0)/_h.length;
+          const _cg = _h.reduce((s,x)=>s+x.lng,0)/_h.length;
+          viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(_cg, _cl - 0.045, 8000),
+            orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-55), roll: 0 }
+          });
         });
-        // Geo labels are added inside initCesium → fetchAndAddGeoLabels,
-        // but if viewer was already created, we only need them once (they persist).
       }
-    }, 150);
+    };
+    setTimeout(() => _doResize(true),  150);
+    setTimeout(() => _doResize(false), 400);
+    setTimeout(() => _doResize(false), 800);
   }
 }
 
@@ -1206,15 +2074,23 @@ async function boot() {
     ]);
     allHouses = hRes.data || [];
     govData = gov; welfareData = wel; geoData = geo; statsData = sts;
-    renderTopStats();
-    renderQuestions();
-    renderChips();
-    plotDefault();
-    document.getElementById('loader').classList.add('gone');
   } catch(e) {
-    console.error('Boot failed:', e);
-    document.querySelector('#loader span').textContent = 'Connection failed — is backend on :8080?';
+    console.warn('API unavailable — loading survey-based seed data for', VILLAGE_SURVEY.basic.name);
+    allHouses = SEED_HOUSES;
+    const pop = allHouses.reduce((s, h) => s + h.total_members, 0);
+    statsData = {
+      total_households: allHouses.length,
+      total_population: pop,
+      bpl_count: allHouses.filter(h => h.bpl).length,
+      total_farmers: VILLAGE_SURVEY.agriculture.total_farmers
+    };
+    govData = null; welfareData = null; geoData = null;
   }
+  renderTopStats();
+  renderQuestions();
+  renderChips();
+  plotDefault();
+  document.getElementById('loader').classList.add('gone');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1222,7 +2098,9 @@ async function boot() {
 // ═══════════════════════════════════════════════════════════
 function renderTopStats() {
   if (!statsData) return;
+  const v = VILLAGE_SURVEY.basic;
   document.getElementById('top-stats').innerHTML = `
+    <div class="top-stat" style="color:var(--c-teal)">${v.name}, ${v.block}</div>
     <div class="top-stat">Households <b>${statsData.total_households}</b></div>
     <div class="top-stat">Population <b>${statsData.total_population}</b></div>
     <div class="top-stat">BPL <b>${statsData.bpl_count}</b></div>
@@ -1233,23 +2111,36 @@ function renderTopStats() {
 // ═══════════════════════════════════════════════════════════
 // QUESTIONS
 // ═══════════════════════════════════════════════════════════
+// Survey-based analysis questions — mapped from Annexure F sections
 const QS = [
   { g: 'Population & Density' },
-  { id:'density',   ico:'◉', sev:'dens', txt:'Where is population density highest?', sub:'Grid clustering + heatmap' },
-  { id:'ward_pop',  ico:'▦', sev:'info', txt:'Which wards have the most people?', sub:'Ward-wise population rank' },
+  { id:'density',    ico:'◉', sev:'dens', txt:'Where is population density highest?', sub:'Heatmap + density grid zones' },
 
-  { g: 'Infrastructure Gaps' },
-  { id:'no_toilet',  ico:'✕', sev:'crit', txt:'Households WITHOUT toilets?', sub:'Sanitation coverage' },
-  { id:'no_elec',    ico:'⚡', sev:'crit', txt:'Households WITHOUT electricity?', sub:'Electrification gaps' },
-  { id:'no_water',   ico:'◇', sev:'warn', txt:'Areas with no water supply?', sub:'Water access mapping' },
+  { g: '§1 Drinking Water' },
+  { id:'no_water',   ico:'💧', sev:'crit', txt:'Households WITHOUT water supply',      sub:`${VILLAGE_SURVEY.water.hh_without_tap} HH lack tap connection` },
 
-  { g: 'Welfare & Vulnerability' },
-  { id:'bpl_noscheme', ico:'⊘', sev:'crit', txt:'BPL families not in any scheme?', sub:'Welfare exclusion' },
-  { id:'pmay_gap',     ico:'▽', sev:'warn', txt:'PMAY-eligible but not enrolled?', sub:'Housing scheme gap' },
-  { id:'bpl_kuccha',   ico:'◆', sev:'warn', txt:'BPL families in Kuccha houses?', sub:'Housing vulnerability' },
+  { g: '§2 Sanitation & Waste' },
+  { id:'no_toilet',  ico:'🚽', sev:'crit', txt:'Households WITHOUT toilets',           sub:`${VILLAGE_SURVEY.sanitation.hh_without_toilet} HH — SBM(G) target` },
+  { id:'no_drain',   ico:'🔵', sev:'warn', txt:'Households WITHOUT drainage',          sub:'Open drain / waterlogging risk' },
+  { id:'waste',      ico:'♻', sev:'warn', txt:'Solid & liquid waste management',       sub:'Segregation, composting, disposal' },
 
-  { g: 'Combined Indicators' },
-  { id:'pop_infra',    ico:'⬡', sev:'crit', txt:'High population + low infrastructure?', sub:'Priority intervention zones' },
+  { g: '§14 Electricity & Energy' },
+  { id:'no_elec',    ico:'⚡', sev:'crit', txt:'Households WITHOUT electricity',        sub:`${VILLAGE_SURVEY.electricity.hh_without_electricity} HH — Saubhagya target` },
+  { id:'no_gas',     ico:'🔥', sev:'warn', txt:'Households WITHOUT LPG/gas',            sub:`${VILLAGE_SURVEY.electricity.no_lpg_hh} HH — Ujjwala target` },
+
+  { g: '§3 Roads & Drainage' },
+  { id:'roads_infra',ico:'🛣', sev:'info', txt:'Road connectivity & drainage status',   sub:`${VILLAGE_SURVEY.roads_drainage.paved_pct}% paved, ${VILLAGE_SURVEY.roads_drainage.drain_to_construct_m}m drain needed` },
+
+  { g: '§17 Education & §20 Health' },
+  { id:'edu_health', ico:'🏥', sev:'info', txt:'Schools, health centres & ICDS',        sub:`${VILLAGE_SURVEY.education.schools.length} schools, 1 PHC, ${VILLAGE_SURVEY.anganwadi.total} AWC` },
+
+  { g: 'Vulnerability & Root Causes' },
+  { id:'bpl_kuccha', ico:'◆', sev:'warn', txt:'BPL families in poor housing',          sub:'Kuccha houses at monsoon risk' },
+  { id:'root_cause', ico:'🔍', sev:'crit', txt:'Root cause analysis & solutions',       sub:'Why infrastructure is missing + schemes' },
+
+  { g: 'Infrastructure Routing Plans' },
+  { id:'slwm_route', ico:'🚿', sev:'plan', txt:'SLWM — Sanitation & Waste Routing',     sub:'House A↔B toilet + biogas + drain pipe plan' },
+  { id:'elec_route', ico:'🔌', sev:'plan', txt:'Grid Expansion — Zone 1 → Zone 2',      sub:'14 poles + nallah crossing + new 63kVA DT' },
 ];
 
 function renderQuestions() {
@@ -1371,38 +2262,31 @@ function circleIcon(color, r) {
 }
 
 function popup(h) {
-  const score = riskScore(h);
-  const bc    = riskBadgeCls(score);
+  const score  = riskScore(h);
+  const bc     = riskBadgeCls(score);
+  const area   = WARD_NAMES[h.ward_no] || `Ward ${h.ward_no}`;
   const issues = [
     !h.has_toilet       && 'No Toilet',
     !h.has_water_supply && 'No Water',
     !h.has_electricity  && 'No Electricity',
-    h.bpl               && 'BPL Family',
-    h.total_members > 5 && `Large Family (${h.total_members})`
-  ].filter(Boolean);
+    h.bpl               && 'BPL'
+  ].filter(Boolean).slice(0, 3); // max 3 issues
   return `<div class="ph">
     <div class="ph-header" style="border-left:3px solid ${riskHex(score)};padding-left:9px">
       <div class="ph-n">${h.head_name}</div>
       <div class="ph-status">
         <span class="risk-badge ${bc}">${riskLabel(score)} · ${score}/100</span>
-        <span class="ph-ward">Ward ${h.ward_no}</span>
+        <span class="ph-ward">${area}</span>
       </div>
     </div>
     <div class="ph-g" style="margin-top:8px">
       <div class="ph-i"><div class="ph-l">Members</div><div class="ph-v">${h.total_members}</div></div>
-      <div class="ph-i"><div class="ph-l">Income</div><div class="ph-v">₹${(h.annual_income/1000).toFixed(0)}K</div></div>
       <div class="ph-i"><div class="ph-l">Status</div><div class="ph-v"><span class="tg ${h.bpl?'bpl':'apl'}">${h.bpl?'BPL':'APL'}</span></div></div>
-      <div class="ph-i"><div class="ph-l">Type</div><div class="ph-v">${h.house_type}</div></div>
-      <div class="ph-i"><div class="ph-l">Toilet</div><div class="ph-v"><span class="tg ${h.has_toilet?'y':'n'}">${h.has_toilet?'YES':'NO'}</span></div></div>
-      <div class="ph-i"><div class="ph-l">Elec.</div><div class="ph-v"><span class="tg ${h.has_electricity?'y':'n'}">${h.has_electricity?'YES':'NO'}</span></div></div>
-      <div class="ph-i"><div class="ph-l">Water</div><div class="ph-v"><span class="tg ${h.has_water_supply?'y':'n'}">${h.has_water_supply?'YES':'NO'}</span></div></div>
-      <div class="ph-i"><div class="ph-l">Gas</div><div class="ph-v"><span class="tg ${h.has_gas?'y':'n'}">${h.has_gas?'YES':'NO'}</span></div></div>
+      <div class="ph-i"><div class="ph-l">Toilet</div><div class="ph-v"><span class="tg ${h.has_toilet?'y':'n'}">${h.has_toilet?'✓':'✗'}</span></div></div>
+      <div class="ph-i"><div class="ph-l">Elec + Water</div><div class="ph-v"><span class="tg ${h.has_electricity?'y':'n'}">${h.has_electricity?'✓':'✗'}</span> <span class="tg ${h.has_water_supply?'y':'n'}">${h.has_water_supply?'✓':'✗'}</span></div></div>
     </div>
     ${issues.length
-      ? `<div class="ph-issues">
-           <div class="ph-issues-label">Issues</div>
-           ${issues.map(i => `<span class="issue-tag">${i}</span>`).join('')}
-         </div>`
+      ? `<div class="ph-issues"><div class="ph-issues-label">Issues</div>${issues.map(i=>`<span class="issue-tag">${i}</span>`).join('')}</div>`
       : `<div class="ph-ok">✓ All infrastructure covered</div>`}
   </div>`;
 }
@@ -1436,8 +2320,8 @@ function plotLeaflet(houses, colorFn, radiusFn) {
     const pos = jitterCoord(h);
     const m = L.marker([pos.lat, pos.lng], { icon: circleIcon(c, r) });
     m.bindPopup(popup(h), { maxWidth: 300 });
-    // Click → sync right panel with household detail
-    m.on('click', () => showHouseholdInsight(h));
+    // Click → stop map pan + sync right panel
+    m.on('click', (e) => { L.DomEvent.stopPropagation(e); showHouseholdInsight(h); });
     cluster.addLayer(m);
   });
   if (houses.length) {
@@ -1533,7 +2417,7 @@ function drawProblemZones(houses, focusMetric) {
       opacity: 0.35 + sev * 0.35,
       dashArray: sev > 0.65 ? null : '6 5'
     }).addTo(zoneLayer);
-    zCircle.on('click', () => showZoneInsight(z, rank, sev, zones));
+    zCircle.on('click', (e) => { L.DomEvent.stopPropagation(e); showZoneInsight(z, rank, sev, zones); });
 
     // ── Floating zone label ──
     const cls   = sev > 0.65 ? 'zone-crit' : sev > 0.35 ? 'zone-warn' : 'zone-ok';
@@ -1548,7 +2432,7 @@ function drawProblemZones(houses, focusMetric) {
       className: '',
       html: `<div class="zone-label ${cls}" data-zone="${z.ward}">
                <div class="zl-rank">${badge}</div>
-               <div class="zl-name">Ward ${z.ward}</div>
+               <div class="zl-name">${WARD_NAMES[z.ward]||'Ward '+z.ward}</div>
                <div class="zl-pop">${z.pop} people · ${z.hs.length} HH</div>
                <div class="zl-issue">${issueText}</div>
              </div>`,
@@ -1558,7 +2442,7 @@ function drawProblemZones(houses, focusMetric) {
 
     L.marker([z.lat, z.lng], { icon, zIndexOffset: 900 - i * 10 })
       .addTo(zoneLabelLayer)
-      .on('click', () => showZoneInsight(z, rank, sev, zones));
+      .on('click', (e) => { L.DomEvent.stopPropagation(e); showZoneInsight(z, rank, sev, zones); });
   });
 }
 
@@ -1587,7 +2471,7 @@ function showZoneInsight(z, rank, sev, allZones) {
               <div class="gr">Ward ${h.ward_no} · ${h.bpl?'BPL':'APL'}${missing?' · NO '+missing:''}</div></div>`;
     }).join('');
 
-  setInsight(`Ward ${z.ward} — ${priorityLabel}`, `
+  setDetailInsight(`${WARD_NAMES[z.ward]||'Ward '+z.ward} — ${priorityLabel}`, `
     <div class="sg">
       <div class="sc"><div class="lb">Priority Rank</div><div class="vl ${urgency}">#${rank} of ${allZones.length}</div></div>
       <div class="sc"><div class="lb">Population</div><div class="vl tl">${z.pop}</div></div>
@@ -1680,7 +2564,7 @@ function drawDensityGrid(houses) {
       dashArray: intensity > 0.65 ? null : '5 4'
     }).addTo(gridLayer);
 
-    rect.on('click', () => showGridZoneInsight(cell, rank + 1, intensity, sorted));
+    rect.on('click', (e) => { L.DomEvent.stopPropagation(e); showGridZoneInsight(cell, rank + 1, intensity, sorted); });
 
     // Small centroid label (only on top-3 cells by pop)
     if (rank < 3 && cell.count > 0) {
@@ -1734,7 +2618,7 @@ function showGridZoneInsight(cell, rank, intensity, allCells) {
       </div>`;
     }).join('');
 
-  setInsight(`Zone ${cell.label} — ${lvl}`, `
+  setDetailInsight(`Zone ${cell.label} — ${lvl}`, `
     <div class="sg">
       <div class="sc"><div class="lb">Density Rank</div><div class="vl ${lvlCls}">#${rank} of ${allCells.filter(c=>c.count>0).length}</div></div>
       <div class="sc"><div class="lb">Population</div><div class="vl tl">${cell.pop}</div></div>
@@ -1759,9 +2643,351 @@ function showLegend(items) {
   el.classList.add('show');
 }
 
+// ═══════════════════════════════════════════════════════════
+// VILLAGE INSIGHTS & SOLUTION SIMULATION
+// ═══════════════════════════════════════════════════════════
+
+function computeVillageStats(houses) {
+  const pop = houses.reduce((s, h) => s + h.total_members, 0);
+  const cLng = CENTER[1]; // 73.812 — geographic split line
+  const east = houses.filter(h => h.lng < cLng);
+  const west = houses.filter(h => h.lng >= cLng);
+  const elecPct = h => h.length ? Math.round(h.filter(x => x.has_electricity).length / h.length * 100) : 0;
+  return {
+    population: pop,
+    households: houses.length,
+    avgRisk: houses.length ? Math.round(houses.reduce((s, h) => s + riskScore(h), 0) / houses.length) : 0,
+    critical: houses.filter(h => riskScore(h) > 60).length,
+    east: {
+      count: east.length,
+      population: east.reduce((s, h) => s + h.total_members, 0),
+      withElec: east.filter(h => h.has_electricity).length,
+      pct: elecPct(east),
+      centroid: east.length ? [
+        east.reduce((s, h) => s + h.lat, 0) / east.length,
+        east.reduce((s, h) => s + h.lng, 0) / east.length
+      ] : [CENTER[0] - 0.004, CENTER[1] - 0.006]
+    },
+    west: {
+      count: west.length,
+      population: west.reduce((s, h) => s + h.total_members, 0),
+      withElec: west.filter(h => h.has_electricity).length,
+      pct: elecPct(west),
+      centroid: west.length ? [
+        west.reduce((s, h) => s + h.lat, 0) / west.length,
+        west.reduce((s, h) => s + h.lng, 0) / west.length
+      ] : [CENTER[0] + 0.004, CENTER[1] + 0.006]
+    }
+  };
+}
+
+function _villageFacilities() {
+  return {
+    schools: [
+      { name: 'Govt. Primary School', lat: CENTER[0] - 0.003, lng: CENTER[1] - 0.004 },
+      { name: 'Nandgaon High School',  lat: CENTER[0] + 0.004, lng: CENTER[1] + 0.005 }
+    ],
+    hospitals: [
+      { name: 'Primary Health Centre', lat: CENTER[0] + 0.001, lng: CENTER[1] - 0.001 }
+    ]
+  };
+}
+
+function _villageRoads() {
+  const c = CENTER;
+  return [
+    // Paved — main arterial roads through the village center
+    { type:'paved', name:'Main Road',
+      path:[[c[0]-0.006, c[1]-0.010],[c[0]-0.001, c[1]-0.002],[c[0]+0.004, c[1]+0.006],[c[0]+0.007, c[1]+0.011]] },
+    { type:'paved', name:'East–West Connector',
+      path:[[c[0]+0.003, c[1]-0.011],[c[0]+0.003, c[1]-0.003],[c[0]+0.001, c[1]+0.003],[c[0]+0.001, c[1]+0.011]] },
+    { type:'paved', name:'North Village Road',
+      path:[[c[0]+0.008, c[1]-0.005],[c[0]+0.003, c[1]-0.001],[c[0]-0.001, c[1]-0.003]] },
+    // Unpaved — dirt paths and field tracks
+    { type:'unpaved', name:'Village Path',
+      path:[[c[0]-0.003, c[1]-0.001],[c[0]-0.006, c[1]+0.003],[c[0]-0.008, c[1]+0.006]] },
+    { type:'unpaved', name:'Field Track (North)',
+      path:[[c[0]+0.007, c[1]+0.001],[c[0]+0.005, c[1]+0.005],[c[0]+0.002, c[1]+0.007]] },
+    { type:'unpaved', name:'Farm Access Road',
+      path:[[c[0]-0.004, c[1]+0.004],[c[0]-0.002, c[1]+0.007],[c[0]+0.001, c[1]+0.009]] }
+  ];
+}
+
+function _clearVillageLayers() {
+  Object.values(_villageLayers).forEach(l => { if (l) { villageLayer.removeLayer(l); } });
+  _villageLayers = { zones: null, roads: null, facilities: null, cable: null };
+}
+
+function drawVillageVisualization(houses) {
+  _clearVillageLayers();
+  const stats = computeVillageStats(houses);
+  const improved = _villageState.eastImproved;
+
+  // ── ELECTRICITY ZONES ──
+  const zonesGroup = L.featureGroup();
+
+  // East zone (low = red, or green if improved)
+  const eCol  = improved ? C.green : C.red;
+  const ePos  = stats.east.centroid;
+  const eCir  = L.circle(ePos, { radius:380, color:eCol, fillColor:eCol, weight:2, opacity:.65, fillOpacity:.15 });
+  const eLbl  = L.marker(ePos, {
+    icon: L.divIcon({
+      html: `<div class="vz-label" style="border-color:${eCol}">
+        <strong style="color:${eCol}">${improved ? '✓ Adequate' : '⚠ Low Electricity'}</strong><br>
+        ${stats.east.pct}% coverage · ${stats.east.withElec}/${stats.east.count} HH
+      </div>`,
+      iconSize: [160, 38], iconAnchor: [80, 38], className: ''
+    })
+  });
+  eCir.on('click',  e => { L.DomEvent.stopPropagation(e); showElecZoneDetail('east', stats); });
+  eLbl.on('click',  e => { L.DomEvent.stopPropagation(e); showElecZoneDetail('east', stats); });
+  eCir.bindTooltip(improved ? 'East Zone — Electricity Adequate' : 'East Zone — Low Electricity\nClick for details', { sticky:true });
+  zonesGroup.addLayer(eCir);
+  zonesGroup.addLayer(eLbl);
+
+  // West zone (high = green)
+  const wPos  = stats.west.centroid;
+  const wCir  = L.circle(wPos, { radius:380, color:C.green, fillColor:C.green, weight:2, opacity:.65, fillOpacity:.15 });
+  const wLbl  = L.marker(wPos, {
+    icon: L.divIcon({
+      html: `<div class="vz-label" style="border-color:${C.green}">
+        <strong style="color:${C.green}">✓ High Electricity</strong><br>
+        ${stats.west.pct}% coverage · ${stats.west.withElec}/${stats.west.count} HH
+      </div>`,
+      iconSize: [160, 38], iconAnchor: [80, 38], className: ''
+    })
+  });
+  wCir.on('click', e => { L.DomEvent.stopPropagation(e); showElecZoneDetail('west', stats); });
+  wLbl.on('click', e => { L.DomEvent.stopPropagation(e); showElecZoneDetail('west', stats); });
+  wCir.bindTooltip('West Zone — High Electricity', { sticky:true });
+  zonesGroup.addLayer(wCir);
+  zonesGroup.addLayer(wLbl);
+
+  // ── APL / BPL HOUSEHOLD DOTS inside zone circles ──
+  // APL → blue (#3888e0), BPL → orange (#e08830)
+  // Color reflects poverty category, not electricity zone.
+  const _hhNames = ['Ramesh K.','Sunita D.','Vijay M.','Anita P.','Suresh B.','Kavita N.','Mohan R.','Priya S.','Arjun T.','Lakshmi V.','Ganesh H.','Meera J.','Ravi C.','Sonal A.','Dinesh W.','Usha F.','Prakash G.','Nanda L.','Yogesh E.','Tara O.'];
+  const _hhOccup = ['Farmer','Daily Labourer','Teacher','Shop Owner','Tailor','Driver','Carpenter','Weaver','Nurse','Mechanic'];
+
+  function _randomDotsInCircle(centre, radiusM, count, elecLabel, group) {
+    const centreLat = centre[0];
+    const centreLng = centre[1];
+    const dLat = radiusM / 111320;
+    const dLng = radiusM / (111320 * Math.cos(centreLat * Math.PI / 180));
+
+    let placed = 0, attempts = 0;
+    const maxAttempts = count * 10;
+
+    while (placed < count && attempts < maxAttempts) {
+      attempts++;
+      const candidateLat = centreLat + (Math.random() * 2 - 1) * dLat;
+      const candidateLng = centreLng + (Math.random() * 2 - 1) * dLng;
+
+      if (lmap.distance(L.latLng(candidateLat, candidateLng), L.latLng(centre)) > radiusM) continue;
+
+      const dist = lmap.distance(L.latLng(candidateLat, candidateLng), L.latLng(centre));
+      if (dist > radiusM * 0.82 && Math.random() < 0.45) continue;
+
+      // ~42% BPL (matches seed data ratio)
+      const isBPL   = Math.random() < 0.42;
+      const dotColor = isBPL ? C.orange : C.blue;   // BPL=orange, APL=blue
+      const catLabel = isBPL ? 'BPL' : 'APL';
+      const catStyle = isBPL ? `color:${C.orange};font-weight:700` : `color:${C.blue};font-weight:700`;
+
+      const houseId = `HH-${Math.floor(1000 + Math.random() * 9000)}`;
+      const name    = _hhNames[placed % _hhNames.length];
+      const members = 3 + Math.floor(Math.random() * 5);
+      const occup   = _hhOccup[Math.floor(Math.random() * _hhOccup.length)];
+      const elecIcon = elecLabel === 'Low' ? '🔴' : '🟢';
+
+      const dot = L.circleMarker([candidateLat, candidateLng], {
+        radius:      4,
+        fillColor:   dotColor,
+        fillOpacity: 0.7,
+        stroke:      false
+      });
+
+      dot.bindPopup(
+        `<div style="font-family:var(--font-mono,monospace);font-size:11px;min-width:165px;line-height:1.8">
+          <div style="font-weight:700;font-size:12px;margin-bottom:4px">${houseId}</div>
+          <div>📋 Category: <span style="${catStyle}">${catLabel}</span></div>
+          <div>${elecIcon} Electricity: <strong>${elecLabel}</strong></div>
+          <div>👤 Head: ${name}</div>
+          <div>👨‍👩‍👧 Members: ${members}</div>
+          <div>💼 ${occup}</div>
+        </div>`,
+        { maxWidth: 210, className: 'hh-popup' }
+      );
+
+      dot.on('mouseover', function() { this.setStyle({ fillOpacity: 1, radius: 6 }); });
+      dot.on('mouseout',  function() { this.setStyle({ fillOpacity: 0.7, radius: 4 }); });
+
+      group.addLayer(dot);
+      placed++;
+    }
+  }
+
+  const ZONE_R    = 380;
+  const DOT_COUNT = 30;
+
+  _randomDotsInCircle(ePos, ZONE_R, DOT_COUNT, improved ? 'High' : 'Low', zonesGroup);
+  _randomDotsInCircle(wPos, ZONE_R, DOT_COUNT, 'High', zonesGroup);
+
+  _villageLayers.zones = zonesGroup;
+  villageLayer.addLayer(zonesGroup);
+
+  // ── ROADS — realistic casing technique ──
+  // Each road = 2 overlapping polylines: wide dark border (casing) + narrow fill
+  // Paved: dark gray border + light gray fill (looks like concrete/asphalt)
+  // Unpaved: dark brown border + tan fill with dashes (looks like dirt track)
+  const roadsGroup = L.featureGroup();
+
+  _villageRoads().forEach(road => {
+    const isPaved = road.type === 'paved';
+    const popup = `<div class="ph">
+      <div class="ph-n">${road.name}</div>
+      <div class="ph-a">${isPaved ? '🛣️ Paved Road — Concrete/Asphalt' : '🟤 Unpaved Track — Dirt/Gravel'}</div>
+    </div>`;
+
+    if (isPaved) {
+      // Casing (border) — slightly wider, dark
+      const casing = L.polyline(road.path, {
+        color: '#4a5060', weight: 7, opacity: 0.85,
+        lineCap: 'round', lineJoin: 'round'
+      });
+      // Fill — narrower, light warm gray (asphalt tone)
+      const fill = L.polyline(road.path, {
+        color: '#d4cfc8', weight: 4, opacity: 0.95,
+        lineCap: 'round', lineJoin: 'round'
+      });
+      fill.bindPopup(popup);
+      roadsGroup.addLayer(casing);
+      roadsGroup.addLayer(fill);
+    } else {
+      // Casing — dark brown
+      const casing = L.polyline(road.path, {
+        color: '#6b4c28', weight: 5, opacity: 0.7,
+        lineCap: 'round', lineJoin: 'round', dashArray: '10 7'
+      });
+      // Fill — tan/dirt color, dashed
+      const fill = L.polyline(road.path, {
+        color: '#c8a46a', weight: 2.5, opacity: 0.9,
+        lineCap: 'round', lineJoin: 'round', dashArray: '10 7'
+      });
+      fill.bindPopup(popup);
+      roadsGroup.addLayer(casing);
+      roadsGroup.addLayer(fill);
+    }
+  });
+
+  _villageLayers.roads = roadsGroup;
+  villageLayer.addLayer(roadsGroup);
+
+  // ── FACILITIES ──
+  const facGroup = L.featureGroup();
+  const fac = _villageFacilities();
+  fac.schools.forEach(s => {
+    const m = L.marker([s.lat, s.lng], {
+      icon: L.divIcon({
+        html: `<div class="fac-marker" style="background:#1a3a6a;border:1.5px solid ${C.blue}" title="${s.name}">📚</div>`,
+        iconSize:[28,28], iconAnchor:[14,14], className:''
+      })
+    });
+    m.bindPopup(`<div class="ph"><div class="ph-n">${s.name}</div><div class="ph-a">🏫 School</div></div>`);
+    m.on('click', e => L.DomEvent.stopPropagation(e));
+    facGroup.addLayer(m);
+  });
+  fac.hospitals.forEach(h => {
+    const m = L.marker([h.lat, h.lng], {
+      icon: L.divIcon({
+        html: `<div class="fac-marker" style="background:#3a0a0a;border:1.5px solid ${C.red}" title="${h.name}">🏥</div>`,
+        iconSize:[28,28], iconAnchor:[14,14], className:''
+      })
+    });
+    m.bindPopup(`<div class="ph"><div class="ph-n">${h.name}</div><div class="ph-a">🏥 Primary Health Centre</div></div>`);
+    m.on('click', e => L.DomEvent.stopPropagation(e));
+    facGroup.addLayer(m);
+  });
+  _villageLayers.facilities = facGroup;
+  villageLayer.addLayer(facGroup);
+
+  // ── CONNECTION CABLE (if improved) ──
+  if (improved) {
+    _drawCable(stats);
+  }
+}
+
+function _drawCable(stats) {
+  if (_villageLayers.cable) villageLayer.removeLayer(_villageLayers.cable);
+  const cable = L.polyline([stats.west.centroid, stats.east.centroid], {
+    color: C.teal, weight: 3.5, opacity: 0.9,
+    dashArray: '', lineCap: 'round', lineJoin: 'round',
+    className: 'cable-anim'
+  });
+  cable.bindTooltip('⚡ Power Cable Connection — West → East', { sticky: true });
+  _villageLayers.cable = cable;
+  villageLayer.addLayer(cable);
+}
+
+function showElecZoneDetail(zone, stats) {
+  const d    = stats[zone];
+  const col  = zone === 'east' ? (_villageState.eastImproved ? 'grn' : 'red') : 'grn';
+  const icon = zone === 'east' ? (_villageState.eastImproved ? '✓' : '⚠') : '✓';
+  const label = zone === 'east' ? 'East Zone' : 'West Zone';
+
+  const html = `
+    <div class="sg">
+      <div class="sc"><div class="lb">Households</div><div class="vl">${d.count}</div></div>
+      <div class="sc"><div class="lb">Population</div><div class="vl tl">${d.population}</div></div>
+      <div class="sc"><div class="lb">Electricity</div><div class="vl ${col}">${d.pct}%</div></div>
+      <div class="sc"><div class="lb">Have Power</div><div class="vl">${d.withElec}<span style="font-size:12px;color:var(--text-secondary)">/${d.count}</span></div></div>
+    </div>
+    <div class="st">Zone Status</div>
+    <div class="rl">
+      <div class="ri">
+        <div class="ri-bar ${col}"></div>
+        <div class="ri-c">
+          <div class="ri-l">${icon} Electricity Access</div>
+          <div class="ri-v">${d.pct}% of households have power${zone==='east'&&!_villageState.eastImproved?' — needs improvement':''}</div>
+        </div>
+      </div>
+      ${zone==='east'&&!_villageState.eastImproved?`
+      <div class="ri">
+        <div class="ri-bar red"></div>
+        <div class="ri-c">
+          <div class="ri-l">⚠ Problem Area</div>
+          <div class="ri-v">Low coverage — ${d.count - d.withElec} households without power</div>
+        </div>
+      </div>` : ''}
+    </div>
+    ${zone==='east'&&!_villageState.eastImproved?`
+    <button class="sim-btn" onclick="simulateElecImprovement()">⚡ Improve Electricity</button>` : ''}
+  `;
+  setDetailInsight(`${label} — Electricity`, html, label);
+}
+
+function simulateElecImprovement() {
+  _villageState.eastImproved = true;
+  const h = applyFilters(allHouses);
+
+  // Redraw village visualization (shows cable + green east zone)
+  drawVillageVisualization(h);
+
+  // Update right panel
+  renderOverview(h);
+}
+
+function resetElecSimulation() {
+  _villageState.eastImproved = false;
+  const h = applyFilters(allHouses);
+  drawVillageVisualization(h);
+  renderOverview(h);
+}
+
 function plotDefault() {
   const h = applyFilters(allHouses);
   drawProblemZones(h);
+  drawVillageVisualization(h);
   // Use risk score for marker color and size
   plotLeaflet(h,
     x => riskHex(riskScore(x)),
@@ -1792,12 +3018,79 @@ function renderOverview(h) {
   const medPct  = h.length ? (medium.length  / h.length * 100).toFixed(0) : 0;
   const devPct  = h.length ? (developed.length/ h.length* 100).toFixed(0) : 0;
 
-  setInsight('Village Overview — Decision Dashboard', `
+  // Find the most critical area
+  const byArea = {};
+  h.forEach(x => {
+    const w = x.ward_no;
+    if (!byArea[w]) byArea[w] = { pop: 0, crit: 0, noToilet: 0, noElec: 0 };
+    byArea[w].pop      += x.total_members;
+    byArea[w].crit     += riskScore(x) > 60 ? 1 : 0;
+    byArea[w].noToilet += x.has_toilet ? 0 : 1;
+    byArea[w].noElec   += x.has_electricity ? 0 : 1;
+  });
+  const worstWard = Object.entries(byArea).sort((a,b)=>b[1].crit-a[1].crit)[0];
+  const keyIssue  = worstWard
+    ? `${worstWard[1].crit} critical HH in ${WARD_NAMES[worstWard[0]]||'Ward '+worstWard[0]}`
+    : 'All areas within tolerance';
+
+  const vs = computeVillageStats(h);
+  const eImproved = _villageState.eastImproved;
+  const eastCol   = eImproved ? 'grn' : 'red';
+  const eastIcon  = eImproved ? '✓' : '⚠';
+
+  const sv  = VILLAGE_SURVEY;
+  const noToilet = h.filter(x => !x.has_toilet).length;
+  const noWater  = h.filter(x => !x.has_water_supply).length;
+  const noElec   = h.filter(x => !x.has_electricity).length;
+  const noDrain  = h.filter(x => !x.has_drainage).length;
+  const noGas    = h.filter(x => !x.has_gas).length;
+
+  setDashInsight(`${sv.basic.name} Village Overview`, `
+    <div style="font-size:10px;color:var(--text-secondary);margin-bottom:10px;font-family:var(--font-mono)">
+      ${sv.basic.district} District · ${sv.basic.block} Block · GP: ${sv.basic.gp} · LGD: ${sv.basic.lgd_code}
+    </div>
+
     <div class="sg">
       <div class="sc"><div class="lb">Population</div><div class="vl tl">${total}</div></div>
       <div class="sc"><div class="lb">Households</div><div class="vl">${h.length}</div></div>
-      <div class="sc"><div class="lb">Avg Size</div><div class="vl amb">${avgSize}</div></div>
+      <div class="sc"><div class="lb">BPL Families</div><div class="vl amb">${h.filter(x=>x.bpl).length}</div></div>
       <div class="sc"><div class="lb">Critical HH</div><div class="vl red">${critical.length}</div><div class="su">${critPct}% of village</div></div>
+    </div>
+
+    <div class="ri" style="margin-bottom:14px">
+      <div class="ri-bar ${critical.length>0?'red':'tl'}"></div>
+      <div class="ri-c">
+        <div class="ri-l">Key Issue</div>
+        <div class="ri-v">${keyIssue}</div>
+      </div>
+    </div>
+
+    <div class="st">📊 Infrastructure Gaps (from Survey)</div>
+    <div class="rl">
+      <div class="ri"><div class="ri-bar ${noToilet>0?'red':'grn'}"></div><div class="ri-c"><div class="ri-l">🚽 No Toilet</div><div class="ri-v">${noToilet} HH (${Math.round(noToilet/h.length*100)}%) — SBM(G) eligible: ${sv.sanitation.hh_eligible_sbm}</div></div></div>
+      <div class="ri"><div class="ri-bar ${noWater>0?'amb':'grn'}"></div><div class="ri-c"><div class="ri-l">💧 No Tap Water</div><div class="ri-v">${noWater} HH (${Math.round(noWater/h.length*100)}%) — JJM target: ${sv.water.hh_without_tap}</div></div></div>
+      <div class="ri"><div class="ri-bar ${noElec>0?'red':'grn'}"></div><div class="ri-c"><div class="ri-l">⚡ No Electricity</div><div class="ri-v">${noElec} HH (${Math.round(noElec/h.length*100)}%) — Saubhagya target: ${sv.electricity.hh_without_electricity}</div></div></div>
+      <div class="ri"><div class="ri-bar ${noDrain>0?'amb':'grn'}"></div><div class="ri-c"><div class="ri-l">🔵 No Drainage</div><div class="ri-v">${noDrain} HH — ${sv.roads_drainage.drain_to_construct_m}m drain needed</div></div></div>
+      <div class="ri"><div class="ri-bar ${noGas>0?'amb':'grn'}"></div><div class="ri-c"><div class="ri-l">🔥 No LPG</div><div class="ri-v">${noGas} HH — Ujjwala eligible</div></div></div>
+    </div>
+
+    <div class="st">🛣️ Roads & Connectivity</div>
+    <div class="rl">
+      <div class="ri">
+        <div style="width:2.5px;height:24px;border-radius:2px;flex-shrink:0;background:#d4cfc8;box-shadow:0 0 0 1.5px #4a5060"></div>
+        <div class="ri-c"><div class="ri-l">Paved Roads</div><div class="ri-v">${sv.roads_drainage.paved_road_m}m (${sv.roads_drainage.paved_pct}%) — CC + brick-topped</div></div>
+      </div>
+      <div class="ri">
+        <div style="width:2.5px;height:24px;border-radius:2px;flex-shrink:0;background:#c8a46a;box-shadow:0 0 0 1.5px #6b4c28"></div>
+        <div class="ri-c"><div class="ri-l">Unpaved</div><div class="ri-v">${sv.roads_drainage.unpaved_road_m}m — needs ${sv.roads_drainage.road_to_construct_m}m construction</div></div>
+      </div>
+    </div>
+
+    <div class="st">🏫 Facilities</div>
+    <div class="rl">
+      <div class="ri"><div class="ri-bar blue"></div><div class="ri-c"><div class="ri-l">Schools (${sv.education.schools.length})</div><div class="ri-v">${sv.education.total_enrollment} students · Literacy ${sv.education.literacy_rate_pct}%</div></div></div>
+      <div class="ri"><div class="ri-bar red"></div><div class="ri-c"><div class="ri-l">Health</div><div class="ri-v">Sub-centre in village · PHC ${sv.health.nearest_phc.distance_km}km</div></div></div>
+      <div class="ri"><div class="ri-bar tl"></div><div class="ri-c"><div class="ri-l">Anganwadi (${sv.anganwadi.total})</div><div class="ri-v">${sv.anganwadi.enrolled_children} children · SAM: ${sv.icds.sam_children} MAM: ${sv.icds.mam_children}</div></div></div>
     </div>
 
     <div class="st">Risk Distribution</div>
@@ -1814,24 +3107,18 @@ function renderOverview(h) {
       </div>
     </div>
 
-    <div class="st">Ward Risk Breakdown</div>
-    ${wardRiskTable(h)}
-
-    <div class="st">Top 5 Priority Households</div>
-    <div class="gl">${top5.map(x => {
-      const s = riskScore(x);
-      const missing = [
-        !x.has_toilet       && 'toilet',
-        !x.has_electricity  && 'elec',
-        !x.has_water_supply && 'water'
-      ].filter(Boolean).join(' · ');
-      return `<div class="gi risk-${riskClass(s)}">
-        <div class="gn">${x.head_name}
-          <span class="risk-badge ${riskBadgeCls(s)}" style="float:right;margin-top:-1px">${s}</span>
-        </div>
-        <div class="gr">Ward ${x.ward_no} · ${x.total_members} members${missing ? ' · NO ' + missing : ''}</div>
-      </div>`;
-    }).join('')}</div>
+    ${!eImproved ? `
+    <button class="sim-btn" onclick="simulateElecImprovement()">
+      ⚡ Simulate: Improve Electricity (East Zone)
+    </button>` : `
+    <div class="sim-success">
+      <span style="font-size:16px">✓</span>
+      <div>
+        <div style="font-weight:600">Electricity Improved</div>
+        <div style="font-size:10.5px;opacity:.8;margin-top:1px">Power cable connected west → east zone</div>
+      </div>
+    </div>
+    <button class="sim-reset-btn" onclick="resetElecSimulation()">↻ Reset Simulation</button>`}
   `);
 }
 
@@ -1851,8 +3138,9 @@ function wardRiskTable(houses) {
     .map(([w, d]) => {
       const avg = Math.round(d.scoreSum / d.count);
       const c   = avg > 60 ? 'hr' : avg >= 30 ? '' : 'hg';
+      const areaName = WARD_NAMES[w] || `Ward ${w}`;
       return `<tr>
-        <td>Ward ${w}</td>
+        <td>${areaName}</td>
         <td class="n">${d.count}</td>
         <td class="n">${d.pop}</td>
         <td class="n ${c}">${avg}</td>
@@ -1889,7 +3177,7 @@ function showHouseholdInsight(h) {
         : `<span class="sr-pts">+${item.pts}</span>`}
     </div>`).join('');
 
-  setInsight(`${h.head_name} — ${riskLabel(score)}`, `
+  setDetailInsight(`${h.head_name} — ${riskLabel(score)}`, `
     <div class="sg">
       <div class="sc">
         <div class="lb">Risk Score</div>
@@ -1913,25 +3201,42 @@ function showHouseholdInsight(h) {
     <div class="st">Infrastructure Status</div>
     <div class="rl">
       <div class="ri"><div class="ri-bar ${h.has_toilet?'tl':'red'}"></div>
-        <div class="ri-c"><div class="ri-l">Toilet / Sanitation</div>
-        <div class="ri-v">${h.has_toilet?'Available — no intervention needed':'NOT available — +30 risk points'}</div></div></div>
+        <div class="ri-c"><div class="ri-l">🚽 Toilet / Sanitation</div>
+        <div class="ri-v">${h.has_toilet?'Available ✓':'NOT available — +30 risk points'}</div></div></div>
       <div class="ri"><div class="ri-bar ${h.has_water_supply?'tl':'amb'}"></div>
-        <div class="ri-c"><div class="ri-l">Water Supply</div>
-        <div class="ri-v">${h.has_water_supply?'Piped connection':'NOT available — +25 risk points'}</div></div></div>
+        <div class="ri-c"><div class="ri-l">💧 Water Supply (${h.water_source||'—'})</div>
+        <div class="ri-v">${h.has_water_supply?'Connected ✓':'NOT available — +25 risk points'}</div></div></div>
       <div class="ri"><div class="ri-bar ${h.has_electricity?'tl':'red'}"></div>
-        <div class="ri-c"><div class="ri-l">Electricity</div>
-        <div class="ri-v">${h.has_electricity?'Connected':'NOT connected — +20 risk points'}</div></div></div>
+        <div class="ri-c"><div class="ri-l">⚡ Electricity</div>
+        <div class="ri-v">${h.has_electricity?'Connected ✓':'NOT connected — +20 risk points'}</div></div></div>
       <div class="ri"><div class="ri-bar ${h.has_gas?'tl':'amb'}"></div>
-        <div class="ri-c"><div class="ri-l">Gas / LPG</div>
-        <div class="ri-v">${h.has_gas?'Connected':'NOT connected'}</div></div></div>
+        <div class="ri-c"><div class="ri-l">🔥 LPG / Clean Fuel</div>
+        <div class="ri-v">${h.has_gas?'Connected ✓':'NOT connected — Ujjwala eligible'}</div></div></div>
+      <div class="ri"><div class="ri-bar ${h.has_drainage?'tl':'amb'}"></div>
+        <div class="ri-c"><div class="ri-l">🔵 Drainage</div>
+        <div class="ri-v">${h.has_drainage?'Pucca drain ✓':'No drainage — waterlogging risk'}</div></div></div>
+      <div class="ri"><div class="ri-bar tl"></div>
+        <div class="ri-c"><div class="ri-l">♻ Waste Management</div>
+        <div class="ri-v">${h.waste_mgmt||'Unknown'}</div></div></div>
     </div>
+
+    ${(() => {
+      const rc = detectRootCauses(h);
+      if (!rc.length) return '';
+      return `<div class="st">🔍 Root Causes & Solutions</div>
+        <div class="rl">
+          ${rc.map(c => `<div class="ri"><div class="ri-bar ${c.priority==='high'?'red':'amb'}"></div>
+            <div class="ri-c"><div class="ri-l">${c.issue}: ${c.cause}</div>
+            <div class="ri-v"><strong>${c.solution}</strong> (${c.scheme})</div></div></div>`).join('')}
+        </div>`;
+    })()}
 
     <div class="st">Household Details</div>
     <div class="rl">
       <div class="ri"><div class="ri-bar tl"></div>
         <div class="ri-c">
           <div class="ri-l">${h.address}</div>
-          <div class="ri-v">${h.house_type} · ₹${(h.annual_income/1000).toFixed(0)}K/yr · ${h.lat.toFixed(5)}, ${h.lng.toFixed(5)}</div>
+          <div class="ri-v">${h.house_type} · ₹${(h.annual_income/1000).toFixed(0)}K/yr · Ward ${h.ward_no} · ${WARD_NAMES[h.ward_no]||''}</div>
         </div>
       </div>
     </div>
@@ -1971,11 +3276,24 @@ function cesiumColorForQ(h) {
       if (h.bpl && h.house_type === 'Kuccha') return Cesium.Color.fromCssColorString(C.red).withAlpha(0.85);
       if (h.bpl) return Cesium.Color.fromCssColorString(C.orange).withAlpha(0.85);
       return Cesium.Color.fromCssColorString(C.gray).withAlpha(0.5);
-    case 'pop_infra':
+    case 'no_drain': return Cesium.Color.fromCssColorString(h.has_drainage ? C.teal : C.orange).withAlpha(0.85);
+    case 'no_gas': return Cesium.Color.fromCssColorString(h.has_gas ? C.green : C.orange).withAlpha(0.85);
+    case 'waste':
+      if (h.waste_mgmt === 'Open dumping') return Cesium.Color.fromCssColorString(C.red).withAlpha(0.85);
+      if (h.waste_mgmt === 'Self-disposal') return Cesium.Color.fromCssColorString(C.orange).withAlpha(0.85);
+      return Cesium.Color.fromCssColorString(C.green).withAlpha(0.85);
+    case 'root_cause': {
+      const rc = detectRootCauses(h);
+      if (rc.some(c => c.priority === 'high')) return Cesium.Color.fromCssColorString(C.red).withAlpha(0.85);
+      if (rc.length > 0) return Cesium.Color.fromCssColorString(C.orange).withAlpha(0.85);
+      return Cesium.Color.fromCssColorString(C.green).withAlpha(0.85);
+    }
+    case 'pop_infra': {
       const sc = (h.has_toilet?1:0)+(h.has_electricity?1:0)+(h.has_water_supply?1:0);
       if (h.total_members >= 4 && sc <= 1) return Cesium.Color.fromCssColorString(C.red).withAlpha(0.85);
       if (h.total_members >= 4 && sc === 2) return Cesium.Color.fromCssColorString(C.yellow).withAlpha(0.85);
       return Cesium.Color.fromCssColorString(C.green).withAlpha(0.85);
+    }
     default: return cesiumColor(h);
   }
 }
@@ -2024,9 +3342,94 @@ function renderCesium(houses) {
   };
 
   // ══════════════════════════════════════════════
-  // STEP 1 — Buildings + per-building name label
-  // (Ward labels removed per user request)
+  // STEP 1a — Ward overview pillars
+  // Visible from 600m – 9000m (far / overview altitude)
+  // Acts as a "bar chart in 3D" so user instantly sees
+  // ward locations + risk without needing to zoom in.
   // ══════════════════════════════════════════════
+  const byWardPillar = {};
+  houses.forEach(h => {
+    const w = h.ward_no;
+    if (!byWardPillar[w]) byWardPillar[w] = { pop:0, latSum:0, lngSum:0, n:0, scoreSum:0 };
+    byWardPillar[w].pop       += h.total_members;
+    byWardPillar[w].latSum    += h.lat;
+    byWardPillar[w].lngSum    += h.lng;
+    byWardPillar[w].n++;
+    byWardPillar[w].scoreSum  += riskScore(h);
+  });
+
+  Object.entries(byWardPillar).forEach(([ward, d]) => {
+    const cLat    = d.latSum / d.n;
+    const cLng    = d.lngSum / d.n;
+    const avgRisk = d.scoreSum / d.n;
+    // Height: 80m base + population scale so denser wards are taller
+    const pillarH = 80 + d.pop * 1.8;
+
+    const col = avgRisk > 60
+      ? Cesium.Color.fromCssColorString('#e04848')
+      : avgRisk >= 30
+      ? Cesium.Color.fromCssColorString('#e0a028')
+      : Cesium.Color.fromCssColorString('#40c060');
+
+    const wardLabel = WARD_NAMES[ward] || `Ward ${ward}`;
+
+    // Pillar body — cone-like cylinder (wider base, narrow top)
+    viewer.entities.add({
+      id: `__pillar_${ward}`,
+      position: Cesium.Cartesian3.fromDegrees(cLng, cLat, pillarH / 2),
+      cylinder: {
+        length:       pillarH,
+        topRadius:    18,
+        bottomRadius: 38,
+        material:     col.withAlpha(0.80),
+        outline:      true,
+        outlineColor: col.brighten(0.25, new Cesium.Color()),
+        outlineWidth: 2.0,
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 20000)
+      }
+    });
+
+    // Glowing cap disc on top
+    viewer.entities.add({
+      id: `__pillar_${ward}_cap`,
+      position: Cesium.Cartesian3.fromDegrees(cLng, cLat, pillarH + 4),
+      ellipse: {
+        semiMajorAxis: 28, semiMinorAxis: 28,
+        material: col.withAlpha(0.45),
+        height: pillarH + 4,
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 20000)
+      }
+    });
+
+    // Label above pillar — area name + stats
+    viewer.entities.add({
+      id: `__pillar_${ward}_lbl`,
+      position: Cesium.Cartesian3.fromDegrees(cLng, cLat, pillarH + 22),
+      label: {
+        text: `${wardLabel}\n${d.pop} people · ${d.n} HH`,
+        font: 'bold 15px "DM Sans", sans-serif',
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: Cesium.Color.fromCssColorString('#0a0e18'),
+        outlineWidth: 3,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        verticalOrigin:   Cesium.VerticalOrigin.BOTTOM,
+        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 20000),
+        showBackground:      true,
+        backgroundColor:     Cesium.Color.fromCssColorString('#0a0e18').withAlpha(0.82),
+        backgroundPadding:   new Cesium.Cartesian2(9, 6),
+        pixelOffset:         new Cesium.Cartesian2(0, -6)
+      }
+    });
+  });
+
+  // ══════════════════════════════════════════════
+  // STEP 1b — Individual 3D buildings
+  // Visible only when camera < 700m (zoomed in)
+  // ══════════════════════════════════════════════
+  const BUILD_FAR = new Cesium.DistanceDisplayCondition(0, 700);
+
   houses.forEach(h => {
     const pos     = jitterCoord(h);
     const storeys = h.total_members <= 3 ? 1 : h.total_members <= 6 ? 2 : 3;
@@ -2039,7 +3442,7 @@ function renderCesium(houses) {
     const plinthZ = plinthH / 2;
     const wallZ   = plinthH + wallH / 2;
     const roofZ   = plinthH + wallH + roofThk / 2;
-    const labelZ  = plinthH + wallH + roofThk + 2.2; // floats above roof
+    const labelZ  = plinthH + wallH + roofThk + 2.2;
 
     const roofCol   = cesiumColorForQ(h).withAlpha(0.96);
     const roofColOL = roofCol.darken(0.3, new Cesium.Color());
@@ -2049,7 +3452,8 @@ function renderCesium(houses) {
       position: Cesium.Cartesian3.fromDegrees(pos.lng, pos.lat, 0.06),
       ellipse: {
         semiMajorAxis: fp * 0.68, semiMinorAxis: fp * 0.6,
-        material: COL.shadow, height: 0.06
+        material: COL.shadow, height: 0.06,
+        distanceDisplayCondition: BUILD_FAR
       }
     });
     shadowEnt._houseId = h.id;
@@ -2061,7 +3465,8 @@ function renderCesium(houses) {
         dimensions: new Cesium.Cartesian3(fp + 0.6, fp + 0.6, plinthH),
         material: COL.plinth,
         outline: true, outlineColor: COL.wallOL,
-        shadows: Cesium.ShadowMode.RECEIVE_ONLY
+        shadows: Cesium.ShadowMode.RECEIVE_ONLY,
+        distanceDisplayCondition: BUILD_FAR
       }
     });
     plinthEnt._houseId = h.id;
@@ -2074,7 +3479,8 @@ function renderCesium(houses) {
         dimensions: wallDim.clone(),
         material: COL.wall,
         outline: true, outlineColor: COL.wallOL, outlineWidth: 1.0,
-        shadows: Cesium.ShadowMode.ENABLED
+        shadows: Cesium.ShadowMode.ENABLED,
+        distanceDisplayCondition: BUILD_FAR
       }
     });
     wallEnt._houseId = h.id;
@@ -2086,12 +3492,13 @@ function renderCesium(houses) {
         dimensions: new Cesium.Cartesian3(fp + 0.35, fp + 0.35, roofThk),
         material: roofCol,
         outline: true, outlineColor: roofColOL, outlineWidth: 1.0,
-        shadows: Cesium.ShadowMode.CAST_ONLY
+        shadows: Cesium.ShadowMode.CAST_ONLY,
+        distanceDisplayCondition: BUILD_FAR
       }
     });
     roofEnt._houseId = h.id;
 
-    // ── (E) Building name label — visible only when camera < 160m ──
+    // ── (E) Building name label — visible only very close ──
     const score = riskScore(h);
     const labelColor = score > 60
       ? Cesium.Color.fromCssColorString('#ff8888')
@@ -2102,8 +3509,7 @@ function renderCesium(houses) {
     const nameEnt = viewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(pos.lng, pos.lat, labelZ),
       label: {
-        // Show first name + ward to keep it readable
-        text: h.head_name.split(' ')[0] + '\nW' + h.ward_no,
+        text: h.head_name.split(' ')[0] + '\n' + (WARD_NAMES[h.ward_no]||'W'+h.ward_no),
         font: '10px "JetBrains Mono", monospace',
         fillColor: labelColor,
         outlineColor: Cesium.Color.fromCssColorString('#060810'),
@@ -2112,7 +3518,6 @@ function renderCesium(houses) {
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        // Only show when very close — avoids clutter from far away
         distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 160),
         showBackground: true,
         backgroundColor: Cesium.Color.fromCssColorString('#060810').withAlpha(0.72),
@@ -2150,10 +3555,18 @@ function pickQ(id) {
     case 'no_toilet': qNoToilet(h); break;
     case 'no_elec': qNoElec(h); break;
     case 'no_water': qNoWater(h); break;
+    case 'no_drain': qNoDrain(h); break;
+    case 'waste': qWaste(h); break;
+    case 'no_gas': qNoGas(h); break;
+    case 'roads_infra': qRoadsInfra(h); break;
+    case 'edu_health': qEduHealth(h); break;
+    case 'root_cause': qRootCause(h); break;
     case 'bpl_noscheme': qBplNoScheme(h); break;
     case 'pmay_gap': qPmayGap(h); break;
     case 'bpl_kuccha': qBplKuccha(h); break;
     case 'pop_infra': qPopInfra(h); break;
+    case 'slwm_route': qSlwmRoute(h); break;
+    case 'elec_route': qElecRoute(h); break;
   }
   if (currentView === '3d') renderCesium(h);
 }
@@ -2200,7 +3613,7 @@ function qDensity(h) {
     </div>`;
   }).join('');
 
-  setInsight('Population Density Analysis', `
+  setDashInsight('Population Density Analysis', `
     <div class="sg">
       <div class="sc"><div class="lb">Total Pop</div><div class="vl tl">${tp}</div></div>
       <div class="sc"><div class="lb">Households</div><div class="vl">${h.length}</div></div>
@@ -2218,7 +3631,7 @@ function qWardPop(h) {
   const mx = Math.max(...Object.values(wp).map(w=>w.pop));
   plotLeaflet(h, x => { const r=(wp[x.ward_no]?.pop||0)/mx; return r>.7?C.red:r>.4?C.amber:C.green; });
   showLegend([{c:C.red,l:'Highest pop ward'},{c:C.amber,l:'Medium'},{c:C.green,l:'Lowest'}]);
-  setInsight('Ward Population Ranking', `
+  setDashInsight('Ward Population Ranking', `
     <div class="sg">
       <div class="sc"><div class="lb">Total Pop</div><div class="vl tl">${h.reduce((s,x)=>s+x.total_members,0)}</div></div>
       <div class="sc"><div class="lb">Wards</div><div class="vl">${Object.keys(wp).length}</div></div>
@@ -2236,7 +3649,7 @@ function qNoToilet(h) {
   showLegend([{c:C.red,l:'No toilet'},{c:C.green,l:'Has toilet'}]);
   const ap = no.reduce((s,x)=>s+x.total_members,0);
   const wb = wardCount(no);
-  setInsight('Sanitation — No Toilet', `
+  setDashInsight('Sanitation — No Toilet', `
     <div class="sg">
       <div class="sc"><div class="lb">No Toilet</div><div class="vl red">${no.length}</div></div>
       <div class="sc"><div class="lb">Has Toilet</div><div class="vl grn">${yes.length}</div></div>
@@ -2261,7 +3674,7 @@ function qNoElec(h) {
   showLegend([{c:C.red,l:'No electricity'},{c:C.green,l:'Connected'}]);
   const ap = no.reduce((s,x)=>s+x.total_members,0);
   const wb = wardCount(no);
-  setInsight('Electrification Gaps', `
+  setDashInsight('Electrification Gaps', `
     <div class="sg">
       <div class="sc"><div class="lb">No Elec.</div><div class="vl red">${no.length}</div></div>
       <div class="sc"><div class="lb">Pop Affected</div><div class="vl red">${ap}</div></div>
@@ -2285,7 +3698,7 @@ function qNoWater(h) {
   showLegend([{c:C.amber,l:'No water'},{c:C.teal,l:'Has water'}]);
   const ap = no.reduce((s,x)=>s+x.total_members,0);
   const wb = wardCount(no);
-  setInsight('Water Supply Gaps', `
+  setDashInsight('Water Supply Gaps', `
     <div class="sg">
       <div class="sc"><div class="lb">No Water</div><div class="vl amb">${no.length}</div></div>
       <div class="sc"><div class="lb">Pop Affected</div><div class="vl amb">${ap}</div></div>
@@ -2312,7 +3725,7 @@ function qBplNoScheme(h) {
   }, x => x.bpl ? 7+x.total_members*2 : 4+x.total_members);
   showLegend([{c:C.red,l:'BPL — likely unschemed'},{c:C.orange,l:'BPL'},{c:C.gray,l:'APL'}]);
   const sc = welfareData?.scheme_coverage||[];
-  setInsight('BPL Welfare Coverage', `
+  setDashInsight('BPL Welfare Coverage', `
     <div class="sg">
       <div class="sc"><div class="lb">BPL Total</div><div class="vl amb">${bpl.length}</div></div>
       <div class="sc"><div class="lb">W/o Scheme</div><div class="vl red">${welfareData?.bpl_without_any_scheme||0}</div></div>
@@ -2335,7 +3748,7 @@ function qPmayGap(h) {
   plotLeaflet(h, x => gids.has(x.id)?C.red:x.bpl&&x.house_type==='Kuccha'?C.yellow:C.green,
     x => gids.has(x.id) ? 12+x.total_members*2 : 5+x.total_members);
   showLegend([{c:C.red,l:'Eligible, NOT enrolled'},{c:C.yellow,l:'BPL+Kuccha'},{c:C.green,l:'OK'}]);
-  setInsight('PMAY Eligibility Gaps', `
+  setDashInsight('PMAY Eligibility Gaps', `
     <div class="sg">
       <div class="sc"><div class="lb">Not Enrolled</div><div class="vl red">${gaps.length}</div></div>
       <div class="sc"><div class="lb">BPL+Kuccha</div><div class="vl amb">${h.filter(x=>x.bpl&&x.house_type==='Kuccha').length}</div></div>
@@ -2357,7 +3770,7 @@ function qBplKuccha(h) {
     x => x.bpl&&x.house_type==='Kuccha' ? 9+x.total_members*2 : 5+x.total_members);
   showLegend([{c:C.red,l:'BPL+Kuccha'},{c:C.orange,l:'BPL other'},{c:C.green,l:'APL'}]);
   const vp = vul.reduce((s,x)=>s+x.total_members,0);
-  setInsight('BPL Housing Vulnerability', `
+  setDashInsight('BPL Housing Vulnerability', `
     <div class="sg">
       <div class="sc"><div class="lb">Vulnerable</div><div class="vl red">${vul.length}</div></div>
       <div class="sc"><div class="lb">Pop Affected</div><div class="vl red">${vp}</div></div>
@@ -2398,7 +3811,7 @@ function qPopInfra(h) {
   });
   showLegend([{c:'#c94040',l:'Critical (pop≥4, infra≤1)'},{c:'#b09030',l:'Partial infra'},{c:'#38a86a',l:'Adequate'}]);
   const cp = crit.reduce((s,x)=>s+x.total_members,0);
-  setInsight('High Population + Low Infrastructure', `
+  setDashInsight('High Population + Low Infrastructure', `
     <div class="sg">
       <div class="sc"><div class="lb">Critical HH</div><div class="vl red">${crit.length}</div></div>
       <div class="sc"><div class="lb">Partial</div><div class="vl amb">${partial.length}</div></div>
@@ -2417,12 +3830,560 @@ function qPopInfra(h) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// NEW SURVEY-BASED QUESTION HANDLERS
+// ═══════════════════════════════════════════════════════════
+
+function qNoDrain(h) {
+  const no = h.filter(x => !x.has_drainage);
+  const yes = h.filter(x => x.has_drainage);
+  drawProblemZones(h);
+  plotLeaflet(h, x => x.has_drainage ? C.teal : C.orange, x => 5 + x.total_members * 1.4);
+  showLegend([{c:C.orange,l:'No drainage'},{c:C.teal,l:'Has drainage'}]);
+  const ap = no.reduce((s,x) => s + x.total_members, 0);
+  const sv = VILLAGE_SURVEY.roads_drainage;
+  setDashInsight('Drainage & Waterlogging', `
+    <div class="sg">
+      <div class="sc"><div class="lb">No Drainage</div><div class="vl red">${no.length}</div></div>
+      <div class="sc"><div class="lb">Has Drainage</div><div class="vl grn">${yes.length}</div></div>
+      <div class="sc"><div class="lb">Pop Affected</div><div class="vl red">${ap}</div></div>
+      <div class="sc"><div class="lb">Drain Needed</div><div class="vl amb">${sv.drain_to_construct_m}m</div></div>
+    </div>
+    <div class="st">Survey Data (§3)</div>
+    <div class="rl">
+      <div class="ri"><div class="ri-bar tl"></div><div class="ri-c"><div class="ri-l">Existing drain length</div><div class="ri-v">${sv.total_drain_length_m}m of ${sv.total_internal_road_m}m road</div></div></div>
+      <div class="ri"><div class="ri-bar red"></div><div class="ri-c"><div class="ri-l">Drain to construct</div><div class="ri-v">${sv.drain_to_construct_m}m (₹15L est. under 15th FC / MGNREGA)</div></div></div>
+    </div>
+    <div class="st">Root Causes</div>
+    <div class="rl">
+      ${sv.drainage_challenges.map(c => `<div class="ri"><div class="ri-bar amb"></div><div class="ri-c"><div class="ri-l">${c}</div><div class="ri-v">Needs intervention</div></div></div>`).join('')}
+    </div>
+    <div class="st">Ward Breakdown</div>
+    ${barChart(Object.entries(wardCount(no)).sort((a,b)=>b[1]-a[1]).map(([w,c])=>({l:WARD_NAMES[w]||'W'+w,v:c,mx:Math.max(...Object.values(wardCount(no))),cl:'amb'})))}
+  `);
+}
+
+function qWaste(h) {
+  const sv = VILLAGE_SURVEY.sanitation;
+  const openDump = h.filter(x => x.waste_mgmt === 'Open dumping');
+  const selfDisp = h.filter(x => x.waste_mgmt === 'Self-disposal');
+  const d2d = h.filter(x => x.waste_mgmt === 'Door-to-door');
+  const compost = h.filter(x => x.waste_mgmt === 'Composting');
+  drawProblemZones(h);
+  plotLeaflet(h, x => {
+    if (x.waste_mgmt === 'Open dumping') return C.red;
+    if (x.waste_mgmt === 'Self-disposal') return C.orange;
+    if (x.waste_mgmt === 'Door-to-door') return C.teal;
+    return C.green;
+  });
+  showLegend([{c:C.red,l:'Open dumping'},{c:C.orange,l:'Self-disposal'},{c:C.teal,l:'Door-to-door'},{c:C.green,l:'Composting'}]);
+  setDashInsight('Solid & Liquid Waste Management', `
+    <div class="sg">
+      <div class="sc"><div class="lb">Open Dump</div><div class="vl red">${openDump.length}</div></div>
+      <div class="sc"><div class="lb">Self-Disp</div><div class="vl amb">${selfDisp.length}</div></div>
+      <div class="sc"><div class="lb">Door-to-Door</div><div class="vl tl">${d2d.length}</div></div>
+      <div class="sc"><div class="lb">Composting</div><div class="vl grn">${compost.length}</div></div>
+    </div>
+    <div class="st">Survey Data (§2)</div>
+    <div class="rl">
+      <div class="ri"><div class="ri-bar tl"></div><div class="ri-c"><div class="ri-l">Current System</div><div class="ri-v">${sv.waste_system}</div></div></div>
+      <div class="ri"><div class="ri-bar ${sv.slwm_plan?'grn':'red'}"></div><div class="ri-c"><div class="ri-l">SLWM Plan (SBM)</div><div class="ri-v">${sv.slwm_plan?'Implemented':'NOT prepared — needs immediate action'}</div></div></div>
+      <div class="ri"><div class="ri-bar tl"></div><div class="ri-c"><div class="ri-l">Plastic-Free Target</div><div class="ri-v">${sv.plastic_free_target?'Target: '+sv.plastic_free_timeline:'No target set'}</div></div></div>
+    </div>
+    <div class="st">Challenges</div>
+    <div class="rl">
+      ${sv.challenges.map(c => `<div class="ri"><div class="ri-bar red"></div><div class="ri-c"><div class="ri-l">${c}</div><div class="ri-v">Action required</div></div></div>`).join('')}
+    </div>
+  `);
+}
+
+function qNoGas(h) {
+  const no = h.filter(x => !x.has_gas);
+  const yes = h.filter(x => x.has_gas);
+  drawProblemZones(h);
+  plotLeaflet(h, x => x.has_gas ? C.green : C.orange, x => 5 + x.total_members * 1.3);
+  showLegend([{c:C.orange,l:'No LPG'},{c:C.green,l:'Has LPG'}]);
+  const bplNoGas = no.filter(x => x.bpl).length;
+  setDashInsight('LPG / Clean Fuel Access', `
+    <div class="sg">
+      <div class="sc"><div class="lb">No LPG</div><div class="vl amb">${no.length}</div></div>
+      <div class="sc"><div class="lb">Has LPG</div><div class="vl grn">${yes.length}</div></div>
+      <div class="sc"><div class="lb">Coverage</div><div class="vl ${yes.length/h.length>0.7?'grn':'amb'}">${h.length?Math.round(yes.length/h.length*100):0}%</div></div>
+      <div class="sc"><div class="lb">BPL w/o</div><div class="vl red">${bplNoGas}</div></div>
+    </div>
+    <div class="st">Root Cause & Solution</div>
+    <div class="rl">
+      <div class="ri"><div class="ri-bar red"></div><div class="ri-c"><div class="ri-l">BPL cannot afford LPG refills</div><div class="ri-v">${bplNoGas} BPL HH cooking on firewood/dung</div></div></div>
+      <div class="ri"><div class="ri-bar amb"></div><div class="ri-c"><div class="ri-l">Indoor air pollution health risk</div><div class="ri-v">Respiratory diseases in women & children</div></div></div>
+      <div class="ri"><div class="ri-bar grn"></div><div class="ri-c"><div class="ri-l">Solution: PMUY (Ujjwala Yojana)</div><div class="ri-v">Free connection + ₹1,600 subsidy for BPL</div></div></div>
+    </div>
+    <div class="st">LPG Agency</div>
+    <div class="rl">
+      <div class="ri"><div class="ri-bar tl"></div><div class="ri-c"><div class="ri-l">${VILLAGE_SURVEY.pds.lpg_agency.name}</div><div class="ri-v">${VILLAGE_SURVEY.pds.lpg_agency.distance_km} km from village</div></div></div>
+    </div>
+  `);
+}
+
+function qRoadsInfra(h) {
+  const sv = VILLAGE_SURVEY.roads_drainage;
+  const ed = VILLAGE_SURVEY.education;
+  drawProblemZones(h);
+  drawVillageVisualization(h);
+  plotLeaflet(h, x => riskHex(riskScore(x)));
+  showLegend([{c:'#d4cfc8',l:'Paved road'},{c:'#c8a46a',l:'Unpaved track'},{c:C.blue,l:'School'},{c:C.red,l:'Hospital'}]);
+  setDashInsight('Roads, Drainage & Connectivity', `
+    <div class="sg">
+      <div class="sc"><div class="lb">Total Roads</div><div class="vl tl">${sv.total_internal_road_m}m</div></div>
+      <div class="sc"><div class="lb">Paved</div><div class="vl grn">${sv.paved_road_m}m</div><div class="su">${sv.paved_pct}%</div></div>
+      <div class="sc"><div class="lb">Unpaved</div><div class="vl amb">${sv.unpaved_road_m}m</div></div>
+      <div class="sc"><div class="lb">Drain Gap</div><div class="vl red">${sv.drain_to_construct_m}m</div></div>
+    </div>
+    <div class="st">Road Types (Survey §3)</div>
+    <div class="rl">
+      <div class="ri"><div style="width:2.5px;height:24px;border-radius:2px;flex-shrink:0;background:#d4cfc8;box-shadow:0 0 0 1.5px #4a5060"></div>
+        <div class="ri-c"><div class="ri-l">CC / Brick-topped</div><div class="ri-v">${sv.cc_road_m}m CC + ${sv.brick_topped_m}m brick</div></div></div>
+      <div class="ri"><div style="width:2.5px;height:24px;border-radius:2px;flex-shrink:0;background:#c8a46a;box-shadow:0 0 0 1.5px #6b4c28"></div>
+        <div class="ri-c"><div class="ri-l">To be constructed</div><div class="ri-v">${sv.road_to_construct_m}m under 15th FC / PMGSY</div></div></div>
+    </div>
+    <div class="st">Streetlights (Survey §14)</div>
+    <div class="rl">
+      <div class="ri"><div class="ri-bar grn"></div><div class="ri-c"><div class="ri-l">With streetlights</div><div class="ri-v">${sv.streetlight_with_m}m (${Math.round(sv.streetlight_with_m/sv.streetlight_total_m*100)}%)</div></div></div>
+      <div class="ri"><div class="ri-bar red"></div><div class="ri-c"><div class="ri-l">Without streetlights</div><div class="ri-v">${sv.streetlight_without_m}m — safety concern at night</div></div></div>
+    </div>
+    <div class="st">Connectivity (Survey §11-12)</div>
+    <div class="rl">
+      <div class="ri"><div class="ri-bar ${VILLAGE_SURVEY.rural_roads.connected_all_weather?'grn':'red'}"></div><div class="ri-c"><div class="ri-l">All-weather road</div><div class="ri-v">${VILLAGE_SURVEY.rural_roads.connected_all_weather?'Connected ✓':'NOT connected'}</div></div></div>
+      <div class="ri"><div class="ri-bar ${VILLAGE_SURVEY.rural_roads.st_bus_service?'grn':'red'}"></div><div class="ri-c"><div class="ri-l">ST Bus Service</div><div class="ri-v">${VILLAGE_SURVEY.rural_roads.st_bus_service?'Available ✓':'Not available'}</div></div></div>
+      <div class="ri"><div class="ri-bar tl"></div><div class="ri-c"><div class="ri-l">Nearest Railway</div><div class="ri-v">${VILLAGE_SURVEY.rural_roads.nearest_railway.name} — ${VILLAGE_SURVEY.rural_roads.nearest_railway.distance_km} km</div></div></div>
+    </div>
+  `);
+}
+
+function qEduHealth(h) {
+  const ed = VILLAGE_SURVEY.education;
+  const hl = VILLAGE_SURVEY.health;
+  const aw = VILLAGE_SURVEY.anganwadi;
+  const ic = VILLAGE_SURVEY.icds;
+  drawProblemZones(h);
+  drawVillageVisualization(h);
+  plotLeaflet(h, x => riskHex(riskScore(x)));
+  showLegend([{c:C.blue,l:'School'},{c:C.red,l:'Health centre'},{c:C.purple,l:'Anganwadi'}]);
+  setDashInsight('Education, Health & ICDS', `
+    <div class="sg">
+      <div class="sc"><div class="lb">Schools</div><div class="vl tl">${ed.schools.length}</div></div>
+      <div class="sc"><div class="lb">Students</div><div class="vl">${ed.total_enrollment}</div></div>
+      <div class="sc"><div class="lb">Literacy</div><div class="vl ${ed.literacy_rate_pct>75?'grn':'amb'}">${ed.literacy_rate_pct}%</div></div>
+      <div class="sc"><div class="lb">Dropout</div><div class="vl red">${ed.dropout_rate_pct}%</div></div>
+    </div>
+    <div class="st">Schools (Survey §17)</div>
+    <div class="rl">
+      ${ed.schools.map(s => `
+        <div class="ri"><div class="ri-bar blue"></div><div class="ri-c">
+          <div class="ri-l">${s.name}</div>
+          <div class="ri-v">${s.type} · ${s.students} students · Ratio ${s.ratio} ${s.has_library?'· Library ✓':''}</div>
+        </div></div>`).join('')}
+      <div class="ri"><div class="ri-bar amb"></div><div class="ri-c"><div class="ri-l">Gender gap in literacy</div><div class="ri-v">Male ${ed.literacy_male_pct}% vs Female ${ed.literacy_female_pct}%</div></div></div>
+    </div>
+    <div class="st">Health (Survey §20)</div>
+    <div class="rl">
+      <div class="ri"><div class="ri-bar tl"></div><div class="ri-c"><div class="ri-l">Nearest PHC</div><div class="ri-v">${hl.nearest_phc.name} — ${hl.nearest_phc.distance_km} km</div></div></div>
+      <div class="ri"><div class="ri-bar ${hl.phc_needs_upgrade?'red':'grn'}"></div><div class="ri-c"><div class="ri-l">PHC Upgrade</div><div class="ri-v">${hl.phc_needs_upgrade?hl.phc_upgrade_details:'No upgrade needed'}</div></div></div>
+      <div class="ri"><div class="ri-bar tl"></div><div class="ri-c"><div class="ri-l">Sub-Centre</div><div class="ri-v">${hl.nearest_sub_centre.name} — in village</div></div></div>
+      ${hl.challenges.map(c => `<div class="ri"><div class="ri-bar red"></div><div class="ri-c"><div class="ri-l">${c}</div><div class="ri-v">Needs resolution</div></div></div>`).join('')}
+    </div>
+    <div class="st">ICDS / Anganwadi (Survey §22)</div>
+    <div class="rl">
+      <div class="ri"><div class="ri-bar tl"></div><div class="ri-c"><div class="ri-l">Children enrolled (0-6 yrs)</div><div class="ri-v">${ic.children_0_6_enrolled} enrolled, ${ic.children_attending} attending</div></div></div>
+      <div class="ri"><div class="ri-bar red"></div><div class="ri-c"><div class="ri-l">Malnourished children</div><div class="ri-v">SAM: ${ic.sam_children} · MAM: ${ic.mam_children}</div></div></div>
+      ${ic.left_out_hamlets.map(c => `<div class="ri"><div class="ri-bar amb"></div><div class="ri-c"><div class="ri-l">Left-out area</div><div class="ri-v">${c}</div></div></div>`).join('')}
+    </div>
+  `);
+}
+
+function qRootCause(h) {
+  const causes = aggregateRootCauses(h);
+  const highPriority = causes.filter(c => c.priority === 'high');
+  const medPriority  = causes.filter(c => c.priority === 'medium');
+
+  drawProblemZones(h);
+  plotLeaflet(h, x => {
+    const rc = detectRootCauses(x);
+    if (rc.some(c => c.priority === 'high')) return C.red;
+    if (rc.length > 0) return C.orange;
+    return C.green;
+  }, x => {
+    const rc = detectRootCauses(x);
+    return 5 + rc.length * 3 + x.total_members;
+  });
+  showLegend([{c:C.red,l:'High-priority gaps'},{c:C.orange,l:'Medium-priority'},{c:C.green,l:'No issues'}]);
+
+  const causeRows = causes.slice(0, 10).map(c => `
+    <div class="ri" style="cursor:pointer">
+      <div class="ri-bar ${c.priority==='high'?'red':'amb'}"></div>
+      <div class="ri-c">
+        <div class="ri-l">${c.issue}: ${c.cause}</div>
+        <div class="ri-v">${c.count} HH · ${c.affected_pop} people — <strong>${c.solution}</strong></div>
+      </div>
+    </div>`).join('');
+
+  const schemeSummary = {};
+  causes.forEach(c => {
+    if (!schemeSummary[c.scheme]) schemeSummary[c.scheme] = { count: 0, pop: 0 };
+    schemeSummary[c.scheme].count += c.count;
+    schemeSummary[c.scheme].pop += c.affected_pop;
+  });
+
+  const schemeRows = Object.entries(schemeSummary)
+    .sort((a, b) => b[1].count - a[1].count)
+    .map(([scheme, d]) => `
+      <div class="ri"><div class="ri-bar grn"></div>
+        <div class="ri-c"><div class="ri-l">${scheme}</div>
+        <div class="ri-v">${d.count} HH · ${d.pop} people eligible</div></div></div>`).join('');
+
+  setDashInsight('Root Cause Analysis & Solutions', `
+    <div class="sg">
+      <div class="sc"><div class="lb">Total Issues</div><div class="vl red">${causes.reduce((s,c)=>s+c.count,0)}</div></div>
+      <div class="sc"><div class="lb">High Priority</div><div class="vl red">${highPriority.length}</div></div>
+      <div class="sc"><div class="lb">Medium</div><div class="vl amb">${medPriority.length}</div></div>
+      <div class="sc"><div class="lb">Schemes</div><div class="vl grn">${Object.keys(schemeSummary).length}</div></div>
+    </div>
+    <div class="st">Why Infrastructure Is Missing</div>
+    <div class="rl">${causeRows}</div>
+    <div class="st">Applicable Government Schemes</div>
+    <div class="rl">${schemeRows}</div>
+  `);
+}
+
+// ═══════════════════════════════════════════════════════════
+// INFRASTRUCTURE ROUTING HANDLERS
+// ═══════════════════════════════════════════════════════════
+
+function qSlwmRoute(h) {
+  const S = SANITATION_PLAN;
+  clearLeaflet();
+
+  // ── Draw pipe route polyline (toilet B → biogas → SLWM site) ──
+  const pipeCoords = ['toilet_B','pipe_jn1','pipe_jn2','biogas_unit'].map(k => [S.nodes[k].lat, S.nodes[k].lng]);
+  const drainCoords = ['biogas_unit','drain_jn1','drain_jn2','drain_jn3','slwm_site'].map(k => [S.nodes[k].lat, S.nodes[k].lng]);
+  const pipeFromA = [[S.nodes.toilet_A_out.lat, S.nodes.toilet_A_out.lng],[S.nodes.biogas_unit.lat, S.nodes.biogas_unit.lng]];
+
+  // Pipe B→Biogas (blue dashed)
+  L.polyline(pipeCoords, { color:'#38bdf8', weight:4, dashArray:'8,6', opacity:0.9 })
+    .bindPopup('<b>4" PVC Closed Pipe</b><br>House B toilet → Biogas unit (65m)')
+    .addTo(zoneLayer);
+  // Pipe A→Biogas (cyan dashed)
+  L.polyline(pipeFromA, { color:'#06b6d4', weight:3, dashArray:'6,8', opacity:0.7 })
+    .bindPopup('<b>4" PVC (retrofit)</b><br>House A greywater → Biogas (replaces open drain)')
+    .addTo(zoneLayer);
+  // Drain Biogas→SLWM (green solid)
+  L.polyline(drainCoords, { color:'#22c55e', weight:5, opacity:0.85 })
+    .bindPopup('<b>6" RCC Covered Drain</b><br>Treated effluent → Village SLWM site (180m)')
+    .addTo(zoneLayer);
+
+  // ── Key node markers ──
+  const nodeStyles = {
+    toilet:  { color:'#38bdf8', icon:'🚽', r:10 },
+    biogas:  { color:'#a855f7', icon:'⚡',  r:12 },
+    slwm:    { color:'#22c55e', icon:'♻️',  r:14 },
+    pipe_jn: { color:'#64748b', icon:'●',  r:4  },
+    drain_jn:{ color:'#22c55e', icon:'●',  r:4  }
+  };
+  Object.entries(S.nodes).forEach(([key, nd]) => {
+    const st = nodeStyles[nd.type] || nodeStyles.pipe_jn;
+    if (nd.type === 'pipe_jn' || nd.type === 'drain_jn') {
+      L.circleMarker([nd.lat, nd.lng], { radius:st.r, color:st.color, fillColor:st.color, fillOpacity:0.6, weight:1 }).addTo(zoneLayer);
+    } else {
+      const mk = L.marker([nd.lat, nd.lng], {
+        icon: L.divIcon({ className:'', html:`<div style="background:${st.color};width:${st.r*2.4}px;height:${st.r*2.4}px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${st.r}px;box-shadow:0 0 8px ${st.color}80;border:2px solid #fff">${st.icon}</div>`, iconSize:[st.r*2.4,st.r*2.4], iconAnchor:[st.r*1.2,st.r*1.2] })
+      });
+      mk.bindPopup(`<b>${nd.label}</b>`);
+      mk.addTo(zoneLayer);
+    }
+  });
+
+  // House A marker
+  L.marker([S.houseA.lat, S.houseA.lng], {
+    icon: L.divIcon({ className:'', html:'<div style="background:#22c55e;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:bold;border:2px solid #fff;box-shadow:0 0 6px #22c55e80">A</div>', iconSize:[22,22], iconAnchor:[11,11] })
+  }).bindPopup(`<b>House A — ${S.houseA.head}</b><br>APL · Pucca · ${S.houseA.members} members<br>✅ SBM toilet (${S.houseA.toilet_type})<br><small>${S.houseA.wasteSystem}</small>`).addTo(zoneLayer);
+
+  // House B marker
+  L.marker([S.houseB.lat, S.houseB.lng], {
+    icon: L.divIcon({ className:'', html:'<div style="background:#ef4444;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:bold;border:2px solid #fff;box-shadow:0 0 6px #ef444480">B</div>', iconSize:[22,22], iconAnchor:[11,11] })
+  }).bindPopup(`<b>House B — ${S.houseB.head}</b><br>BPL · Semi-Pucca · ${S.houseB.members} members<br>❌ No toilet<br><small>${S.houseB.rootCause}</small>`).addTo(zoneLayer);
+
+  // Community toilet marker
+  L.circleMarker([S.communityToilet.lat, S.communityToilet.lng], { radius:8, color:'#f59e0b', fillColor:'#f59e0b', fillOpacity:0.5, weight:2 })
+    .bindPopup(`<b>Community Toilet</b><br>${S.communityToilet.distance_m}m from House B<br>${S.communityToilet.condition}`).addTo(zoneLayer);
+
+  // Fit map to show entire route
+  const allPts = Object.values(S.nodes).map(n=>[n.lat,n.lng]).concat([[S.houseA.lat,S.houseA.lng],[S.houseB.lat,S.houseB.lng]]);
+  lmap.fitBounds(L.latLngBounds(allPts).pad(0.15), { animate:true, duration:0.6 });
+
+  showLegend([
+    {c:'#ef4444',l:'House B (no toilet)'},
+    {c:'#22c55e',l:'House A (SBM toilet)'},
+    {c:'#38bdf8',l:'Proposed 4" PVC pipe'},
+    {c:'#a855f7',l:'Shared biogas unit'},
+    {c:'#22c55e',l:'Covered drain → SLWM'}
+  ]);
+
+  // ── Right panel ──
+  const stepRows = S.proposal.steps.map(s => `
+    <div class="ri"><div class="ri-bar ${s.step<=2?'red':s.step<=3?'amb':'grn'}"></div>
+      <div class="ri-c"><div class="ri-l">Step ${s.step}: ${s.action}</div>
+      <div class="ri-v">${s.timeline} · ₹${(s.cost/1000).toFixed(0)}K</div></div></div>`).join('');
+
+  setDashInsight('SLWM — Sanitation & Waste Routing', `
+    <div class="sg">
+      <div class="sc"><div class="lb">Total Cost</div><div class="vl amb">₹${(S.proposal.estimatedCost/1000).toFixed(0)}K</div></div>
+      <div class="sc"><div class="lb">Timeline</div><div class="vl">${S.proposal.timeline_months} mo</div></div>
+      <div class="sc"><div class="lb">Scheme</div><div class="vl grn">SBM-II</div></div>
+      <div class="sc"><div class="lb">HH Benefit</div><div class="vl">2</div></div>
+    </div>
+
+    <div class="st">House A — ${S.houseA.head} (APL, Pucca)</div>
+    <div class="rl"><div class="ri"><div class="ri-bar grn"></div><div class="ri-c">
+      <div class="ri-l">✅ Has SBM twin-pit toilet (ID: ${S.houseA.sbm_id})</div>
+      <div class="ri-v">${S.houseA.wasteSystem}</div></div></div></div>
+
+    <div class="st">House B — ${S.houseB.head} (BPL, Semi-Pucca)</div>
+    <div class="rl"><div class="ri"><div class="ri-bar red"></div><div class="ri-c">
+      <div class="ri-l">❌ No toilet — Root Cause:</div>
+      <div class="ri-v">${S.houseB.rootCause}</div></div></div>
+    <div class="ri"><div class="ri-bar amb"></div><div class="ri-c">
+      <div class="ri-l">Current practice:</div>
+      <div class="ri-v">${S.houseB.currentPractice}</div></div></div></div>
+
+    <div class="st">Proposed SLWM Plan (${S.proposal.timeline_months} months)</div>
+    <div class="rl">${stepRows}</div>
+
+    <div class="st">Physical Route — Pipe Network</div>
+    <div class="rl">
+      ${S.connections.map(c => `<div class="ri"><div class="ri-bar" style="background:#38bdf8"></div><div class="ri-c">
+        <div class="ri-l">${S.nodes[c.from]?.label || c.from} → ${S.nodes[c.to]?.label || c.to}</div>
+        <div class="ri-v">${c.pipe} · ${c.length_m}m${c.note ? ' · '+c.note : ''}</div></div></div>`).join('')}
+    </div>
+  `);
+}
+
+function qElecRoute(h) {
+  const E = ELECTRICITY_PLAN;
+  clearLeaflet();
+
+  // ── Plot all houses colored by zone ──
+  h.forEach(house => {
+    const inZ1 = [1,2,3].includes(house.ward_no);
+    const color = inZ1
+      ? (house.has_electricity ? '#22c55e' : '#eab308')
+      : (house.has_electricity ? '#f97316' : '#ef4444');
+    const pos = jitterCoord(house);
+    const m = L.marker([pos.lat, pos.lng], { icon: circleIcon(color, 6) });
+    m.bindPopup(popup(house), { maxWidth: 300 });
+    m.on('click', (e) => { L.DomEvent.stopPropagation(e); showHouseholdInsight(house); });
+    cluster.addLayer(m);
+  });
+
+  // ── Pole markers + conductor line ──
+  const poleMap = {};
+  E.poles.forEach(p => { poleMap[p.id] = p; });
+
+  // Conductor polyline (full route)
+  const routeCoords = E.poles.map(p => [p.lat, p.lng]);
+  L.polyline(routeCoords, { color:'#f59e0b', weight:3, opacity:0.9, dashArray:'10,5' })
+    .bindPopup('<b>Proposed 11kV Line</b><br>DT-1 → DT-2 (17 poles, 2.2km)')
+    .addTo(zoneLayer);
+
+  // Individual pole markers
+  E.poles.forEach(p => {
+    const isTransformer = p.type === 'transformer';
+    const isRiver = p.type === 'river_pole';
+    const color = isTransformer ? '#a855f7' : isRiver ? '#ef4444' : '#f59e0b';
+    const size = isTransformer ? 16 : isRiver ? 10 : 6;
+    const icon = isTransformer ? '⚡' : isRiver ? '🔴' : '';
+
+    if (isTransformer || isRiver) {
+      L.marker([p.lat, p.lng], {
+        icon: L.divIcon({
+          className:'',
+          html:`<div style="background:${color};width:${size*2}px;height:${size*2}px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${size-2}px;box-shadow:0 0 10px ${color}80;border:2px solid #fff;color:#fff;font-weight:bold">${icon}</div>`,
+          iconSize:[size*2,size*2], iconAnchor:[size,size]
+        })
+      }).bindPopup(`<b>${p.label}</b><br>${p.material}${p.note ? '<br><em>'+p.note+'</em>' : ''}`).addTo(zoneLayer);
+    } else {
+      L.circleMarker([p.lat, p.lng], { radius:size, color, fillColor:color, fillOpacity:0.8, weight:2 })
+        .bindPopup(`<b>${p.label}</b><br>${p.material}`).addTo(zoneLayer);
+    }
+  });
+
+  // ── Nallah obstacle line ──
+  L.polyline(
+    [[E.nallah.lat1, E.nallah.lng1],[E.nallah.lat2, E.nallah.lng2]],
+    { color:'#3b82f6', weight:8, opacity:0.35, dashArray:'2,6' }
+  ).bindPopup(`<b>${E.nallah.label}</b><br>Width: ${E.nallah.width_m}m`).addTo(zoneLayer);
+  // Nallah label
+  const nMid = [(E.nallah.lat1+E.nallah.lat2)/2, (E.nallah.lng1+E.nallah.lng2)/2];
+  L.marker(nMid, {
+    icon: L.divIcon({ className:'', html:'<div style="background:#3b82f680;color:#fff;padding:2px 8px;border-radius:8px;font-size:10px;white-space:nowrap;font-weight:600">🌊 Nallah (15m)</div>', iconSize:[100,20], iconAnchor:[50,10] })
+  }).addTo(zoneLabelLayer);
+
+  // ── Zone boundary circles ──
+  L.circle([E.zone1.transformer.lat, E.zone1.transformer.lng], { radius: 2200, color:'#22c55e', fillColor:'#22c55e', fillOpacity:0.04, weight:1.5, dashArray:'8,4' })
+    .bindPopup(`<b>Zone 1 — Main Village</b><br>${E.zone1.hh_electrified}/${E.zone1.hh_total} HH electrified`).addTo(zoneLayer);
+  L.circle([18.4780, 73.7920], { radius: 1800, color:'#ef4444', fillColor:'#ef4444', fillOpacity:0.04, weight:1.5, dashArray:'8,4' })
+    .bindPopup(`<b>Zone 2 — New Settlement</b><br>${E.zone2.hh_electrified}/${E.zone2.hh_total} HH electrified<br><small>${E.zone2.rootCause}</small>`).addTo(zoneLayer);
+
+  // Fit bounds to full pole route + houses
+  const allPts = E.poles.map(p=>[p.lat,p.lng]).concat(h.map(x=>[x.lat,x.lng]));
+  lmap.fitBounds(L.latLngBounds(allPts).pad(0.08), { animate:true, duration:0.6 });
+
+  showLegend([
+    {c:'#22c55e',l:'Zone 1 — Electrified'},
+    {c:'#eab308',l:'Zone 1 — No connection'},
+    {c:'#f97316',l:'Zone 2 — Illegal hookup'},
+    {c:'#ef4444',l:'Zone 2 — No electricity'},
+    {c:'#f59e0b',l:'Proposed 11kV pole route'},
+    {c:'#a855f7',l:'Transformers (DT-1/DT-2)'},
+    {c:'#3b82f6',l:'Nallah obstacle'}
+  ]);
+
+  // ── Right panel ──
+  const stepRows = E.proposal.steps.map(s => `
+    <div class="ri"><div class="ri-bar ${s.step<=2?'amb':s.step<=4?'red':'grn'}"></div>
+      <div class="ri-c"><div class="ri-l">Step ${s.step}: ${s.action}</div>
+      <div class="ri-v">${s.timeline} · ₹${(s.cost/1000).toFixed(0)}K</div></div></div>`).join('');
+
+  const conductorRows = E.conductors.map(c => `
+    <div class="ri"><div class="ri-bar" style="background:#f59e0b"></div>
+      <div class="ri-c"><div class="ri-l">${poleMap[c.from]?.label||c.from} → ${poleMap[c.to]?.label||c.to}</div>
+      <div class="ri-v">${c.conductor} · ${c.span_m}m${c.note ? ' · '+c.note : ''}</div></div></div>`).join('');
+
+  setDashInsight('Grid Expansion — Zone 1 → Zone 2', `
+    <div class="sg">
+      <div class="sc"><div class="lb">Total Cost</div><div class="vl amb">₹${(E.proposal.estimatedCost/100000).toFixed(1)}L</div></div>
+      <div class="sc"><div class="lb">Timeline</div><div class="vl">${E.proposal.timeline_months} mo</div></div>
+      <div class="sc"><div class="lb">Poles</div><div class="vl">${E.poles.filter(p=>p.type!=='transformer').length}</div></div>
+      <div class="sc"><div class="lb">HH Benefit</div><div class="vl grn">${E.zone2.hh_total}</div></div>
+    </div>
+
+    <div class="st">Zone 1 — Main Village (Wards 1-3)</div>
+    <div class="rl"><div class="ri"><div class="ri-bar grn"></div><div class="ri-c">
+      <div class="ri-l">${E.zone1.hh_electrified}/${E.zone1.hh_total} HH electrified (${Math.round(E.zone1.hh_electrified/E.zone1.hh_total*100)}%)</div>
+      <div class="ri-v">${E.zone1.description}</div></div></div></div>
+
+    <div class="st">Zone 2 — New Settlement (Wards 4-5)</div>
+    <div class="rl"><div class="ri"><div class="ri-bar red"></div><div class="ri-c">
+      <div class="ri-l">${E.zone2.hh_electrified}/${E.zone2.hh_total} HH electrified (${Math.round(E.zone2.hh_electrified/E.zone2.hh_total*100)}%)</div>
+      <div class="ri-v">${E.zone2.description}</div></div></div>
+    <div class="ri"><div class="ri-bar red"></div><div class="ri-c">
+      <div class="ri-l">Root Cause — Why Zone 2 Lacks Power</div>
+      <div class="ri-v">${E.zone2.rootCause}</div></div></div></div>
+
+    <div class="st">Proposed Plan (${E.proposal.timeline_months} months)</div>
+    <div class="rl">${stepRows}</div>
+
+    <div class="st">Pole Route — ${E.poles.length} nodes, ${E.conductors.length} spans</div>
+    <div class="rl">${conductorRows}</div>
+
+    <div class="st">Obstacles</div>
+    <div class="rl">
+      <div class="ri"><div class="ri-bar" style="background:#3b82f6"></div><div class="ri-c">
+        <div class="ri-l">🌊 Seasonal Nallah (${E.nallah.width_m}m wide)</div>
+        <div class="ri-v">Requires 2 × 12m steel poles with 45m clearance span. Monsoon depth 3m — standard PSC poles cannot be used.</div></div></div>
+      <div class="ri"><div class="ri-bar amb"></div><div class="ri-c">
+        <div class="ri-l">🌾 Paddy fields (200m stretch)</div>
+        <div class="ri-v">GP easement required for pole foundations on agricultural land. Compensation ₹15,000/pole for 4 affected landholders.</div></div></div>
+    </div>
+  `);
+}
+
+// ═══════════════════════════════════════════════════════════
+// PANEL STATE MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+let _lastDashState = null;   // { t, html } — last dashboard/query view
+let _inDetail      = false;  // whether right panel is showing a detail item
+let _fromPillar    = false;  // whether detail view was opened via a 3D pillar click
+
+// Hide all __pillar_* Cesium entities (called on pillar click, before blocks appear)
+function _hidePillars() {
+  if (typeof viewer === 'undefined') return;
+  viewer.entities.values.forEach(e => {
+    if (e.id && typeof e.id === 'string' && e.id.startsWith('__pillar_')) e.show = false;
+  });
+}
+
+// Restore all __pillar_* Cesium entities (called on Back button from pillar detail)
+function _showPillars() {
+  if (typeof viewer === 'undefined') return;
+  viewer.entities.values.forEach(e => {
+    if (e.id && typeof e.id === 'string' && e.id.startsWith('__pillar_')) e.show = true;
+  });
+}
+
+// Core setter — animates content swap + block enter animation
+function setInsight(t, html) {
+  const body  = document.getElementById('insight-body');
+  const title = document.getElementById('insight-title');
+  body.classList.add('fading');
+  setTimeout(() => {
+    title.textContent = t;
+    body.innerHTML    = html;
+    // Mark data blocks as entering so they start invisible
+    body.querySelectorAll('.sc, .ri').forEach(el => el.classList.add('entering'));
+    body.classList.remove('fading');
+    // Small delay so browser paints entering state before transition kicks in
+    setTimeout(() => {
+      body.querySelectorAll('.sc.entering, .ri.entering').forEach(el => el.classList.remove('entering'));
+    }, 16);
+  }, 130);
+}
+
+// Dashboard/query views — save as "home" state, hide back button
+function setDashInsight(t, html) {
+  _inDetail      = false;
+  _lastDashState = { t, html };
+  _hideBackRow();
+  setInsight(t, html);
+}
+
+// Detail views (household / zone / pillar) — show back button + breadcrumb
+function setDetailInsight(t, html, crumbLabel) {
+  _inDetail = true;
+  _showBackRow(crumbLabel || t);
+  setInsight(t, html);
+}
+
+function _showBackRow(label) {
+  const row   = document.getElementById('back-row');
+  const crumb = document.getElementById('panel-crumb');
+  crumb.innerHTML = `
+    <span class="crumb-home">Home</span>
+    <span class="crumb-sep">›</span>
+    <span class="crumb-active">${label}</span>`;
+  row.style.display = 'flex';
+}
+
+function _hideBackRow() {
+  document.getElementById('back-row').style.display = 'none';
+}
+
+// Go back to last dashboard state (or Village Overview as fallback)
+function goBack() {
+  _inDetail = false;
+  _hideBackRow();
+  // If we came from a pillar click, restore the 3D pillars
+  if (_fromPillar) {
+    _fromPillar = false;
+    _showPillars();
+  }
+  if (_lastDashState) {
+    setInsight(_lastDashState.t, _lastDashState.html);
+  } else {
+    showVillageOverview(applyFilters(allHouses));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════
-function setInsight(t, html) {
-  document.getElementById('insight-title').textContent = t;
-  document.getElementById('insight-body').innerHTML = html;
-}
 
 function wardAgg(h) {
   const m = {};
@@ -2438,7 +4399,7 @@ function wardCount(arr) {
 function wardPopTable(wp) {
   const s = Object.entries(wp).sort((a,b)=>b[1].pop-a[1].pop);
   return `<table class="wt"><thead><tr><th>Ward</th><th>HH</th><th>Pop</th><th>Avg</th></tr></thead><tbody>
-    ${s.map(([w,d])=>`<tr><td>Ward ${w}</td><td class="n">${d.count}</td><td class="n ${d.pop>40?'hr':''}">${d.pop}</td><td class="n">${(d.pop/d.count).toFixed(1)}</td></tr>`).join('')}
+    ${s.map(([w,d])=>`<tr><td>${WARD_NAMES[w]||'Ward '+w}</td><td class="n">${d.count}</td><td class="n ${d.pop>40?'hr':''}">${d.pop}</td><td class="n">${(d.pop/d.count).toFixed(1)}</td></tr>`).join('')}
   </tbody></table>`;
 }
 

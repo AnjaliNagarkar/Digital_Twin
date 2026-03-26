@@ -29,7 +29,7 @@ func (s *householdSvc) List(ctx context.Context, f model.HouseListFilter) ([]mod
 	if f.Page < 1 {
 		f.Page = 1
 	}
-	if f.PageSize < 1 || f.PageSize > 100 {
+	if f.PageSize < 1 || f.PageSize > 500 {
 		f.PageSize = 20
 	}
 	return s.repo.List(ctx, f)
