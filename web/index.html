@@ -206,22 +206,24 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
 }
 
 .q-item {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: all .15s;
-  margin-bottom: 1px;
+  transition: all .25s cubic-bezier(0.4,0,0.2,1);
+  margin-bottom: 2px;
   border: 1px solid transparent;
   position: relative;
 }
-.q-item:hover { background: var(--bg-card-hover); border-color: var(--border); }
-.q-item.active { background: var(--bg-active); border-color: var(--border-active); }
+.q-item:hover { background: var(--bg-card-hover); border-color: var(--border); transform: translateX(3px); }
+.q-item.active { background: var(--bg-active); border-color: var(--border-active); box-shadow: 0 2px 12px rgba(40,192,168,0.12); }
 .q-item.active::before {
   content: '';
   position: absolute;
-  left: 0; top: 8px; bottom: 8px;
-  width: 2px; border-radius: 1px;
+  left: 0; top: 6px; bottom: 6px;
+  width: 3px; border-radius: 2px;
+  animation: barPulse 2s ease-in-out infinite;
 }
+@keyframes barPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 .q-item[data-sev="crit"].active::before { background: var(--c-red); }
 .q-item[data-sev="warn"].active::before { background: var(--c-yellow); }
 .q-item[data-sev="info"].active::before { background: var(--c-teal); }
@@ -402,8 +404,15 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
   color: var(--text-muted);
 }
 #insight-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 5px; line-height: 1.3; }
-#insight-body { flex: 1; overflow-y: auto; padding: 14px 16px; transition: opacity .15s ease, transform .15s ease; }
+#insight-body { flex: 1; overflow-y: auto; padding: 14px 16px; transition: opacity .15s ease, transform .15s ease; position: relative; }
 #insight-body.fading { opacity: 0; transform: translateY(5px); }
+#insight-body::before {
+  content: ''; position: sticky; top: 0; left: 0; right: 0; display: block;
+  height: 2px; margin: -14px -16px 14px; z-index: 1;
+  background: linear-gradient(90deg, var(--c-teal), var(--c-blue));
+  transform: scaleX(var(--scroll-pct, 0)); transform-origin: left;
+  transition: transform .1s ease-out; opacity: 0.7;
+}
 
 /* ── Back navigation row ── */
 #back-row {
@@ -441,8 +450,9 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
   border-radius: var(--radius); padding: 10px 12px;
   opacity: 1; transform: translateY(0);
   will-change: opacity, transform;
-  transition: opacity 0.15s ease-in, transform 0.15s ease-in;
+  transition: opacity 0.15s ease-in, transform 0.15s ease-in, border-color .2s, box-shadow .2s;
 }
+.sc:hover { border-color: var(--border-active); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
 .sc.entering { opacity: 0; transform: translateY(4px); }
 @keyframes slideUp { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: translateY(0); } }
 .sc .lb { font-family: var(--font-mono); font-size: 8.5px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
@@ -475,8 +485,9 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
   margin-bottom: 4px; display: flex; align-items: center; gap: 10px;
   opacity: 1; transform: translateY(0);
   will-change: opacity, transform;
-  transition: opacity 0.15s ease-in, transform 0.15s ease-in;
+  transition: opacity 0.15s ease-in, transform 0.15s ease-in, border-color .2s, background .2s;
 }
+.ri:hover { background: var(--bg-card-hover); border-color: var(--border-active); }
 .ri.entering { opacity: 0; transform: translateY(4px); }
 .ri-bar { width: 2.5px; height: 24px; border-radius: 2px; flex-shrink: 0; }
 .ri-bar.red { background: var(--c-red); }
@@ -785,6 +796,59 @@ html, body { height: 100%; background: var(--bg-root); color: var(--text-primary
   50%       { opacity: 0.5; }
 }
 .cable-anim path { animation: cablePulse 1.8s ease-in-out infinite; }
+
+/* ── Before/After Simulation Toggle ── */
+.sim-toggle {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 8px 12px;
+  margin-bottom: 14px;
+}
+.sim-toggle-label { font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
+.sim-toggle-label.active { color: var(--text-primary); }
+.sim-switch {
+  position: relative; width: 36px; height: 20px;
+  background: var(--c-red-soft); border: 1px solid rgba(224,72,72,0.3);
+  border-radius: 10px; cursor: pointer; transition: all .3s ease;
+  flex-shrink: 0;
+}
+.sim-switch.on {
+  background: var(--c-green-soft); border-color: rgba(64,192,96,0.3);
+}
+.sim-switch::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--c-red); transition: all .3s cubic-bezier(0.4,0,0.2,1);
+}
+.sim-switch.on::after {
+  left: 18px; background: var(--c-green);
+}
+.sim-impact {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 12px;
+  margin-top: 12px; position: relative; overflow: hidden;
+}
+.sim-impact::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--c-green); border-radius: 2px;
+}
+.sim-impact-title {
+  font-family: var(--font-mono); font-size: 8.5px; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--c-green);
+  margin-bottom: 6px;
+}
+.sim-impact-row {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; padding: 3px 0; color: var(--text-secondary);
+}
+.sim-impact-row .old { text-decoration: line-through; color: var(--c-red); opacity: 0.7; font-family: var(--font-mono); font-size: 10px; }
+.sim-impact-row .new { color: var(--c-green); font-weight: 600; font-family: var(--font-mono); font-size: 10px; }
+.sim-impact-row .arrow { color: var(--text-muted); font-size: 10px; margin: 0 6px; }
+@keyframes simPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(64,192,96,0); }
+  50% { box-shadow: 0 0 0 4px rgba(64,192,96,0.15); }
+}
+.sim-impact.animating { animation: simPulse 1s ease-out; }
 
 /* ═══════ MOBILE / RESPONSIVE ═══════ */
 @media (max-width: 768px) {
@@ -1505,6 +1569,7 @@ let _gridCellsCache = [];  // last computed grid cells — used by panel onclick
 let _villageState = {
   eastImproved: false,   // has electricity simulation been applied?
 };
+let _simMode = false;  // Before/After toggle — false = "Before" (current), true = "After" (improved)
 let _villageLayers = {
   zones: null,       // L.featureGroup — east/west electricity circles + labels
   roads: null,       // L.featureGroup — paved/unpaved polylines
@@ -1538,6 +1603,64 @@ const zoneLayer      = L.layerGroup().addTo(lmap);  // ward-level problem zones
 lmap.addLayer(cluster);
 const ambientLayer   = L.layerGroup().addTo(lmap);  // per-house soft ambient circles
 const zoneLabelLayer = L.layerGroup().addTo(lmap);  // floating zone labels
+
+// ── Zoom-based layer declutter — 3-tier system ──────────
+//
+//  Zoom < 11  (Taluka/overview)  : only clustered house dots + heatmap
+//  Zoom 11–13 (GP/village level) : + problem zone rings (no labels)
+//  Zoom >= 13 (House level)      : everything — facilities, roads,
+//                                  zone labels, ambient glows
+//
+// ── Zoom-level bands ──────────────────────────────────────
+//  ≥ 14  House level      — everything visible
+//  13    Village level    — zones + labels + ambient
+//  11    GP level         — zone rings only (no labels/ambient)
+//  < 11  Taluka/overview  — clean base map + clustered dots only
+//
+// NOTE: facilities (schools, hospitals) and roads are NEVER added
+// here — they only appear when their specific query is selected
+// (edu_health / roads_infra). clearLeaflet() removes them on every
+// query switch so they never persist.
+function _applyZoomLayers() {
+  const z = lmap.getZoom();
+
+  // ── 1. Problem zone circles (ward rings) ─────────────────
+  // Hide early — at GP level and below they create visual noise
+  const showZones = z >= 13;
+  if (showZones) { if (!lmap.hasLayer(zoneLayer))    lmap.addLayer(zoneLayer);    }
+  else           { if (lmap.hasLayer(zoneLayer))     lmap.removeLayer(zoneLayer); }
+
+  // ── 2. Zone labels (floating ward name + badge chips) ────
+  const showLabels = z >= 14;
+  if (showLabels) { if (!lmap.hasLayer(zoneLabelLayer)) lmap.addLayer(zoneLabelLayer);    }
+  else            { if (lmap.hasLayer(zoneLabelLayer))  lmap.removeLayer(zoneLabelLayer); }
+
+  // ── 3. Ambient glow circles around each house ────────────
+  const showAmbient = z >= 14;
+  if (showAmbient) { if (!lmap.hasLayer(ambientLayer)) lmap.addLayer(ambientLayer);    }
+  else             { if (lmap.hasLayer(ambientLayer))  lmap.removeLayer(ambientLayer); }
+
+  // ── 4. Density grid rectangles ───────────────────────────
+  const showGrid = z >= 13;
+  if (showGrid) { if (!lmap.hasLayer(gridLayer)) lmap.addLayer(gridLayer);    }
+  else          { if (lmap.hasLayer(gridLayer))  lmap.removeLayer(gridLayer); }
+
+  // ── 5. Roads — only manage zoom visibility if currently shown
+  if (_villageLayers.roads) {
+    const showRoads = z >= 11;
+    if (showRoads) { if (!villageLayer.hasLayer(_villageLayers.roads)) villageLayer.addLayer(_villageLayers.roads); }
+    else           { if (villageLayer.hasLayer(_villageLayers.roads))  villageLayer.removeLayer(_villageLayers.roads); }
+  }
+
+  // ── 6. Facilities — only manage zoom if currently shown (edu_health query)
+  if (_villageLayers.facilities) {
+    const showFac = z >= 11;
+    if (showFac) { if (!villageLayer.hasLayer(_villageLayers.facilities)) villageLayer.addLayer(_villageLayers.facilities); }
+    else         { if (villageLayer.hasLayer(_villageLayers.facilities))  villageLayer.removeLayer(_villageLayers.facilities); }
+  }
+}
+
+lmap.on('zoomend', _applyZoomLayers);
 
 // ═══════════════════════════════════════════════════════════
 // CESIUM INIT
@@ -1845,14 +1968,12 @@ function initCesium() {
       _hidePillars();
       _fromPillar = true;
 
-      // Compute centroid of actual jittered coords (same as buildings)
-      const jCoords = wardHouses.map(h => jitterCoord(h));
-      const cLat = jCoords.reduce((s, p) => s + p.lat, 0) / jCoords.length;
-      const cLng = jCoords.reduce((s, p) => s + p.lng, 0) / jCoords.length;
+      // Fly to the ward's pillar position — same coords where buildings are rendered
+      const anyHouse = wardHouses[0];
+      const pillarPos = wardPillarJitter(Number(wardNo), anyHouse.lat, anyHouse.lng);
 
-      // Fly directly to ward centroid at building-visible altitude (~600m)
       viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(cLng, cLat, 620),
+        destination: Cesium.Cartesian3.fromDegrees(pillarPos.lng, pillarPos.lat, 620),
         orientation: {
           heading: Cesium.Math.toRadians(0),
           pitch:   Cesium.Math.toRadians(-45),
@@ -1941,6 +2062,20 @@ function initCesium() {
       easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT
     });
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+  // ── Auto-restore pillars when user manually zooms back out ──
+  // camera.moveEnd only fires after animated flyTo; scroll-wheel zoom
+  // doesn't trigger it. Use postRender (fires every frame) instead so
+  // the check runs regardless of how the camera moved.
+  viewer.scene.postRender.addEventListener(() => {
+    if (!_fromPillar) return;
+    const carto = Cesium.Ellipsoid.WGS84.cartesianToCartographic(viewer.camera.positionWC);
+    if (!carto) return;
+    if (carto.height > 1800) {   // back above building-visible range
+      _fromPillar = false;
+      _showPillars();
+    }
+  });
 }
 
 // ── Highlight helpers ──
@@ -2027,28 +2162,21 @@ function switchView(v) {
       viewer.scene.requestRender();
       if (rerender) {
         renderCesium(applyFilters(allHouses));
-        // Use flyTo so Cesium auto-computes bounding sphere regardless of canvas size.
-        // Only frame the ward-level pillar entities (ids starting with __pillar_[digit])
-        // to avoid buildings (which are at ground level) pulling the camera too close.
-        const pillarEnts = viewer.entities.values.filter(e => /^__pillar_\d$/.test(e.id));
-        const collection = new Cesium.EntityCollection();
-        pillarEnts.forEach(e => collection.add(e));
-        viewer.flyTo(pillarEnts, {
-          offset: new Cesium.HeadingPitchRange(
-            Cesium.Math.toRadians(15),   // heading — slight NNE so wards spread into view
-            Cesium.Math.toRadians(-55),  // pitch — steep down to fit wide spread in narrow canvas
-            10000                         // range: far enough to frame 5km ward spread
-          ),
-          duration: 1.2
-        }).catch(() => {
-          // Fallback: manual setView at centroid
-          const _h = allHouses.length ? allHouses : SEED_HOUSES;
-          const _cl = _h.reduce((s,x)=>s+x.lat,0)/_h.length;
-          const _cg = _h.reduce((s,x)=>s+x.lng,0)/_h.length;
-          viewer.camera.setView({
-            destination: Cesium.Cartesian3.fromDegrees(_cg, _cl - 0.045, 8000),
-            orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-55), roll: 0 }
-          });
+        // Position camera directly from computed centroid — avoid flyTo which places
+        // camera 15–20 km away (bounding sphere of tall pillars across 5 km spread).
+        const _h = allHouses.length ? allHouses : SEED_HOUSES;
+        const _cl = _h.reduce((s,x)=>s+x.lat,0)/_h.length;
+        const _cg = _h.reduce((s,x)=>s+x.lng,0)/_h.length;
+        // Look straight-ish down from above/south so all 5 wards fit at once.
+        // Altitude 6500 m at -65° pitch gives ~7 km ground coverage — enough for 5km spread.
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(_cg, _cl - 0.02, 6500),
+          orientation: {
+            heading: Cesium.Math.toRadians(0),
+            pitch:   Cesium.Math.toRadians(-65),
+            roll:    0
+          },
+          duration: 1.0
         });
       }
     };
@@ -2152,6 +2280,16 @@ function renderQuestions() {
   }).join('');
 }
 
+// ── Scroll progress indicator for insight panel ──
+(function() {
+  const body = document.getElementById('insight-body');
+  if (body) body.addEventListener('scroll', () => {
+    const pct = body.scrollHeight > body.clientHeight
+      ? body.scrollTop / (body.scrollHeight - body.clientHeight) : 0;
+    body.style.setProperty('--scroll-pct', pct.toFixed(3));
+  });
+})();
+
 // ═══════════════════════════════════════════════════════════
 // FILTERS
 // ═══════════════════════════════════════════════════════════
@@ -2246,6 +2384,12 @@ function clearLeaflet() {
   zoneLayer.clearLayers();
   zoneLabelLayer.clearLayers();
   gridLayer.clearLayers();
+  // Remove all persistent village overlay layers (roads, facilities, zones, cable)
+  // so POIs (schools, hospitals) only appear for their specific query, not globally.
+  Object.keys(_villageLayers).forEach(k => {
+    const l = _villageLayers[k];
+    if (l) { villageLayer.removeLayer(l); _villageLayers[k] = null; }
+  });
   if (heatmapLayer) { lmap.removeLayer(heatmapLayer); heatmapLayer = null; }
 }
 
@@ -2682,34 +2826,70 @@ function computeVillageStats(houses) {
 }
 
 function _villageFacilities() {
+  // Place facilities at ACTUAL ward centroids so they're visible on the real data
+  const wc = _wardCentroids();
   return {
     schools: [
-      { name: 'Govt. Primary School', lat: CENTER[0] - 0.003, lng: CENTER[1] - 0.004 },
-      { name: 'Nandgaon High School',  lat: CENTER[0] + 0.004, lng: CENTER[1] + 0.005 }
+      { name: 'ZP Primary School, Chinchpur', lat: wc[1].lat + 0.001, lng: wc[1].lng - 0.001, ward: 1, students: 65, type: 'Primary (1-4)' },
+      { name: 'ZP Upper Primary School',      lat: wc[3].lat - 0.001, lng: wc[3].lng + 0.001, ward: 3, students: 45, type: 'Upper Primary (5-7)' }
     ],
     hospitals: [
-      { name: 'Primary Health Centre', lat: CENTER[0] + 0.001, lng: CENTER[1] - 0.001 }
+      { name: 'Primary Health Sub-Centre', lat: wc[2].lat + 0.001, lng: wc[2].lng - 0.002, ward: 2, distance: '0 km (in village)' }
+    ],
+    anganwadis: [
+      { name: 'AWC-1 Chinchpur North', lat: wc[1].lat - 0.001, lng: wc[1].lng + 0.001, ward: 1 },
+      { name: 'AWC-2 Dhangarwadi',     lat: wc[3].lat + 0.001, lng: wc[3].lng - 0.002, ward: 3 }
     ]
   };
 }
 
+// Compute actual ward centroids from live data
+function _wardCentroids() {
+  const src = allHouses.length ? allHouses : SEED_HOUSES;
+  const wc = {};
+  src.forEach(h => {
+    if (!wc[h.ward_no]) wc[h.ward_no] = { latS:0, lngS:0, n:0 };
+    wc[h.ward_no].latS += h.lat;
+    wc[h.ward_no].lngS += h.lng;
+    wc[h.ward_no].n++;
+  });
+  const result = {};
+  Object.entries(wc).forEach(([w, d]) => {
+    result[w] = { lat: d.latS / d.n, lng: d.lngS / d.n, n: d.n };
+  });
+  return result;
+}
+
 function _villageRoads() {
-  const c = CENTER;
+  // Build roads connecting ACTUAL ward centroids so they're visible on the real data
+  const wc = _wardCentroids();
+  const w1 = wc[1] || {lat:CENTER[0]+0.003,lng:CENTER[1]-0.004};
+  const w2 = wc[2] || {lat:CENTER[0]-0.002,lng:CENTER[1]-0.003};
+  const w3 = wc[3] || {lat:CENTER[0]-0.004,lng:CENTER[1]+0.003};
+  const w4 = wc[4] || {lat:CENTER[0]+0.002,lng:CENTER[1]+0.005};
+  const w5 = wc[5] || {lat:CENTER[0]-0.001,lng:CENTER[1]+0.008};
+  // Midpoints for natural road curves
+  const m13 = [(w1.lat+w3.lat)/2, (w1.lng+w3.lng)/2];
+  const m35 = [(w3.lat+w5.lat)/2, (w3.lng+w5.lng)/2];
   return [
-    // Paved — main arterial roads through the village center
-    { type:'paved', name:'Main Road',
-      path:[[c[0]-0.006, c[1]-0.010],[c[0]-0.001, c[1]-0.002],[c[0]+0.004, c[1]+0.006],[c[0]+0.007, c[1]+0.011]] },
-    { type:'paved', name:'East–West Connector',
-      path:[[c[0]+0.003, c[1]-0.011],[c[0]+0.003, c[1]-0.003],[c[0]+0.001, c[1]+0.003],[c[0]+0.001, c[1]+0.011]] },
-    { type:'paved', name:'North Village Road',
-      path:[[c[0]+0.008, c[1]-0.005],[c[0]+0.003, c[1]-0.001],[c[0]-0.001, c[1]-0.003]] },
-    // Unpaved — dirt paths and field tracks
-    { type:'unpaved', name:'Village Path',
-      path:[[c[0]-0.003, c[1]-0.001],[c[0]-0.006, c[1]+0.003],[c[0]-0.008, c[1]+0.006]] },
-    { type:'unpaved', name:'Field Track (North)',
-      path:[[c[0]+0.007, c[1]+0.001],[c[0]+0.005, c[1]+0.005],[c[0]+0.002, c[1]+0.007]] },
-    { type:'unpaved', name:'Farm Access Road',
-      path:[[c[0]-0.004, c[1]+0.004],[c[0]-0.002, c[1]+0.007],[c[0]+0.001, c[1]+0.009]] }
+    // Paved — main arterial connecting wards 1→3→4 (north to south-west)
+    { type:'paved', name:'Main Village Road (NH-connected)',
+      path:[[w1.lat,w1.lng], m13, [w3.lat,w3.lng], [(w3.lat+w4.lat)/2,(w3.lng+w4.lng)/2], [w4.lat,w4.lng]] },
+    // Paved — east-west connector wards 2→3→5
+    { type:'paved', name:'East–West Connector Road',
+      path:[[w2.lat,w2.lng], [(w2.lat+w3.lat)/2,(w2.lng+w3.lng)/2], [w3.lat,w3.lng], m35, [w5.lat,w5.lng]] },
+    // Paved — direct link ward 1→2
+    { type:'paved', name:'North Ring Road',
+      path:[[w1.lat,w1.lng], [(w1.lat+w2.lat)/2,(w1.lng+w2.lng)/2], [w2.lat,w2.lng]] },
+    // Unpaved — farm track ward 4→5 (through south)
+    { type:'unpaved', name:'Farm Track (South)',
+      path:[[w4.lat,w4.lng], [(w4.lat+w5.lat)/2,(w4.lng+w5.lng)/2-0.003], [w5.lat,w5.lng]] },
+    // Unpaved — field path near ward 1
+    { type:'unpaved', name:'Field Path (North-West)',
+      path:[[w1.lat+0.002,w1.lng-0.003], [w1.lat,w1.lng], [w1.lat-0.003,w1.lng+0.002]] },
+    // Unpaved — track near ward 5
+    { type:'unpaved', name:'Ambedkar Nagar Access',
+      path:[[w5.lat+0.002,w5.lng-0.002], [w5.lat,w5.lng], [w5.lat-0.002,w5.lng+0.003]] }
   ];
 }
 
@@ -2883,31 +3063,45 @@ function drawVillageVisualization(houses) {
   _villageLayers.roads = roadsGroup;
   villageLayer.addLayer(roadsGroup);
 
-  // ── FACILITIES ──
+  // ── FACILITIES (large, visible markers with labels) ──
   const facGroup = L.featureGroup();
   const fac = _villageFacilities();
-  fac.schools.forEach(s => {
-    const m = L.marker([s.lat, s.lng], {
+
+  // Helper: create a big facility marker with glow + text label
+  function _facMarker(lat, lng, emoji, name, bgColor, borderColor, popupHtml) {
+    // Large icon marker
+    const m = L.marker([lat, lng], {
       icon: L.divIcon({
-        html: `<div class="fac-marker" style="background:#1a3a6a;border:1.5px solid ${C.blue}" title="${s.name}">📚</div>`,
-        iconSize:[28,28], iconAnchor:[14,14], className:''
+        html: `<div style="display:flex;flex-direction:column;align-items:center;pointer-events:auto">
+          <div style="background:${bgColor};width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;border:2.5px solid ${borderColor};box-shadow:0 0 16px ${borderColor}60,0 2px 8px rgba(0,0,0,0.3)">${emoji}</div>
+          <div style="background:${bgColor}ee;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;margin-top:3px;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 4px rgba(0,0,0,0.3);font-family:var(--font-mono)">${name}</div>
+        </div>`,
+        iconSize: [140, 60], iconAnchor: [70, 30], className: ''
       })
     });
-    m.bindPopup(`<div class="ph"><div class="ph-n">${s.name}</div><div class="ph-a">🏫 School</div></div>`);
+    m.bindPopup(popupHtml, { maxWidth: 280 });
     m.on('click', e => L.DomEvent.stopPropagation(e));
+    // Glow radius circle
+    const glow = L.circle([lat, lng], { radius: 200, color: borderColor, fillColor: borderColor, fillOpacity: 0.08, weight: 1.5, opacity: 0.4, dashArray: '4,4' });
+    facGroup.addLayer(glow);
     facGroup.addLayer(m);
+  }
+
+  fac.schools.forEach(s => {
+    _facMarker(s.lat, s.lng, '🏫', s.name.split(',')[0], '#1a3a6a', '#4488dd',
+      `<div class="ph"><div class="ph-n">${s.name}</div><div class="ph-a">🏫 ${s.type} · ${s.students} students · Ward ${s.ward}</div></div>`);
   });
   fac.hospitals.forEach(h => {
-    const m = L.marker([h.lat, h.lng], {
-      icon: L.divIcon({
-        html: `<div class="fac-marker" style="background:#3a0a0a;border:1.5px solid ${C.red}" title="${h.name}">🏥</div>`,
-        iconSize:[28,28], iconAnchor:[14,14], className:''
-      })
-    });
-    m.bindPopup(`<div class="ph"><div class="ph-n">${h.name}</div><div class="ph-a">🏥 Primary Health Centre</div></div>`);
-    m.on('click', e => L.DomEvent.stopPropagation(e));
-    facGroup.addLayer(m);
+    _facMarker(h.lat, h.lng, '🏥', h.name, '#5a1a1a', '#ee4444',
+      `<div class="ph"><div class="ph-n">${h.name}</div><div class="ph-a">🏥 Health Sub-Centre · ${h.distance} · Ward ${h.ward}</div></div>`);
   });
+  if (fac.anganwadis) {
+    fac.anganwadis.forEach(a => {
+      _facMarker(a.lat, a.lng, '👶', a.name, '#3a1a5a', '#a855f7',
+        `<div class="ph"><div class="ph-n">${a.name}</div><div class="ph-a">👶 Anganwadi Centre · Ward ${a.ward}</div></div>`);
+    });
+  }
+
   _villageLayers.facilities = facGroup;
   villageLayer.addLayer(facGroup);
 
@@ -2987,12 +3181,12 @@ function resetElecSimulation() {
 function plotDefault() {
   const h = applyFilters(allHouses);
   drawProblemZones(h);
-  drawVillageVisualization(h);
   // Use risk score for marker color and size
   plotLeaflet(h,
     x => riskHex(riskScore(x)),
     x => 5 + x.total_members * 1.4 + riskScore(x) * 0.07
   );
+  drawVillageVisualization(h);
   showLegend([
     {c:'#e04848', l:'Critical (score > 60)'},
     {c:'#e0a028', l:'Medium (score 30–60)'},
@@ -3313,6 +3507,39 @@ function jitterCoord(house) {
   };
 }
 
+function wardJitterCoord(house) {
+  // Place each house around its ward's PILLAR position (not the raw GPS coords).
+  // This ensures clicking a pillar zooms to THAT ward's cluster of buildings,
+  // not the central pile where all raw house.lat/lng values sit.
+  // ±60m scatter gives visible individual buildings without too much spread.
+  const pillarPos = wardPillarJitter(house.ward_no, house.lat, house.lng);
+  const jScale = 0.00054;  // ~60m scatter
+  return {
+    lat: pillarPos.lat + (seededRand(house.id * 13 + 1) - 0.5) * 2 * jScale,
+    lng: pillarPos.lng + (seededRand(house.id * 7  + 5) - 0.5) * 2 * jScale
+  };
+}
+
+function wardPillarJitter(wardNo, lat, lng) {
+  // Pillars placed in a wide radial ring — 1.5 km from village center — so that
+  // at the 6.5 km overview altitude all 5 wards are clearly separated and labels
+  // never overlap. Uniform 72° spacing with a small angle jitter.
+  const baseAngle = (wardNo - 1) * (Math.PI * 2 / 5); // 72° per ward
+  const jitterAngle = (seededRand(wardNo * 13 + 7) - 0.5) * 0.18; // ±10° jitter
+  const angle = baseAngle + jitterAngle;
+
+  const baseRadius = 0.014; // ~1.4 km from CENTER — wide enough at 6.5 km altitude
+  const jig = 0.001 * (seededRand(wardNo * 29 + 11) - 0.5); // ±100m variation
+  const radius = baseRadius + jig;
+
+  const cx = CENTER[0];
+  const cy = CENTER[1];
+  return {
+    lat: cx + Math.sin(angle) * radius,
+    lng: cy + Math.cos(angle) * radius
+  };
+}
+
 // ═══════════════════════════════════════════════════════════
 // 3D BUILDING RENDERER
 // Architecture: 3-layer stack  →  plinth · walls · roof
@@ -3342,11 +3569,16 @@ function renderCesium(houses) {
   };
 
   // ══════════════════════════════════════════════
-  // STEP 1a — Ward overview pillars
-  // Visible from 600m – 9000m (far / overview altitude)
-  // Acts as a "bar chart in 3D" so user instantly sees
-  // ward locations + risk without needing to zoom in.
+  // VISIBILITY RANGES (three zoom tiers)
+  //  > 5 km  → ward overview pillars
+  //  1–5 km  → per-house status beacons (coloured by active query)
+  //  < 1.5 km→ full 3D buildings
   // ══════════════════════════════════════════════
+  // Pillars always visible (0 → 80km) — clicking a pillar zooms camera
+  // to ~620m; scrolling back out to 30-40km must still show them.
+  const PILLAR_FAR = new Cesium.DistanceDisplayCondition(0, 80000);
+  // Beacons start exactly where buildings end — no visual overlap
+  const BEACON_FAR = new Cesium.DistanceDisplayCondition(1500, 5000);
   const byWardPillar = {};
   houses.forEach(h => {
     const w = h.ward_no;
@@ -3362,8 +3594,9 @@ function renderCesium(houses) {
     const cLat    = d.latSum / d.n;
     const cLng    = d.lngSum / d.n;
     const avgRisk = d.scoreSum / d.n;
-    // Height: 80m base + population scale so denser wards are taller
-    const pillarH = 80 + d.pop * 1.8;
+    const pillarOrigin = wardPillarJitter(Number(ward), cLat, cLng);
+    // Height: 300m base + 8× population scale — LARGE pillars visible at 5km spread
+    const pillarH = 300 + d.pop * 8;
 
     const col = avgRisk > 60
       ? Cesium.Color.fromCssColorString('#e04848')
@@ -3372,66 +3605,116 @@ function renderCesium(houses) {
       : Cesium.Color.fromCssColorString('#40c060');
 
     const wardLabel = WARD_NAMES[ward] || `Ward ${ward}`;
+    const riskLabel = avgRisk > 60 ? 'CRITICAL' : avgRisk >= 30 ? 'MEDIUM' : 'DEVELOPED';
 
-    // Pillar body — cone-like cylinder (wider base, narrow top)
+    // Pillar body — tall cone visible at overview altitude
     viewer.entities.add({
       id: `__pillar_${ward}`,
-      position: Cesium.Cartesian3.fromDegrees(cLng, cLat, pillarH / 2),
+      position: Cesium.Cartesian3.fromDegrees(pillarOrigin.lng, pillarOrigin.lat, pillarH / 2),
       cylinder: {
         length:       pillarH,
-        topRadius:    18,
-        bottomRadius: 38,
-        material:     col.withAlpha(0.80),
+        topRadius:    60,
+        bottomRadius: 140,
+        material:     col.withAlpha(0.85),
         outline:      true,
-        outlineColor: col.brighten(0.25, new Cesium.Color()),
+        outlineColor: col.brighten(0.3, new Cesium.Color()),
         outlineWidth: 2.0,
-        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 20000)
+        distanceDisplayCondition: PILLAR_FAR
       }
     });
 
-    // Glowing cap disc on top
+    // Glowing cap disc on top — large enough to see
     viewer.entities.add({
       id: `__pillar_${ward}_cap`,
-      position: Cesium.Cartesian3.fromDegrees(cLng, cLat, pillarH + 4),
+      position: Cesium.Cartesian3.fromDegrees(pillarOrigin.lng, pillarOrigin.lat, pillarH + 10),
       ellipse: {
-        semiMajorAxis: 28, semiMinorAxis: 28,
-        material: col.withAlpha(0.45),
-        height: pillarH + 4,
-        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 20000)
+        semiMajorAxis: 100, semiMinorAxis: 100,
+        material: col.withAlpha(0.50),
+        height: pillarH + 10,
+        distanceDisplayCondition: PILLAR_FAR
       }
     });
 
-    // Label above pillar — area name + stats
+    // Ward label — short 2-line text, shrinks gracefully at far range
     viewer.entities.add({
       id: `__pillar_${ward}_lbl`,
-      position: Cesium.Cartesian3.fromDegrees(cLng, cLat, pillarH + 22),
+      position: Cesium.Cartesian3.fromDegrees(pillarOrigin.lng, pillarOrigin.lat, pillarH + 80),
       label: {
-        text: `${wardLabel}\n${d.pop} people · ${d.n} HH`,
-        font: 'bold 15px "DM Sans", sans-serif',
+        text: `W${ward} · ${wardLabel}\n${riskLabel}  ${d.pop}p / ${d.n}HH`,
+        font: 'bold 14px "DM Sans", sans-serif',
         fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.fromCssColorString('#0a0e18'),
+        outlineColor: Cesium.Color.fromCssColorString('#000'),
         outlineWidth: 3,
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         verticalOrigin:   Cesium.VerticalOrigin.BOTTOM,
         horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 20000),
-        showBackground:      true,
-        backgroundColor:     Cesium.Color.fromCssColorString('#0a0e18').withAlpha(0.82),
-        backgroundPadding:   new Cesium.Cartesian2(9, 6),
-        pixelOffset:         new Cesium.Cartesian2(0, -6)
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 10000),
+        scaleByDistance: new Cesium.NearFarScalar(2000, 1.1, 9000, 0.55),
+        showBackground:    true,
+        backgroundColor:   col.withAlpha(0.82),
+        backgroundPadding: new Cesium.Cartesian2(10, 6)
+      }
+    });
+
+    // Ground ring — ward boundary indicator on the terrain
+    viewer.entities.add({
+      id: `__pillar_${ward}_ring`,
+      position: Cesium.Cartesian3.fromDegrees(pillarOrigin.lng, pillarOrigin.lat, 2),
+      ellipse: {
+        semiMajorAxis: 250, semiMinorAxis: 250,
+        material: col.withAlpha(0.15),
+        height: 2,
+        outline: true,
+        outlineColor: col.withAlpha(0.5),
+        distanceDisplayCondition: PILLAR_FAR
       }
     });
   });
 
   // ══════════════════════════════════════════════
-  // STEP 1b — Individual 3D buildings
-  // Visible only when camera < 700m (zoomed in)
+  // STEP 1b — Per-house status beacons (medium zoom 800m–5km)
+  // Small coloured pins that show the active query status
+  // for each household — visible when zoomed into a ward.
   // ══════════════════════════════════════════════
-  const BUILD_FAR = new Cesium.DistanceDisplayCondition(0, 700);
+  houses.forEach(h => {
+    const pos = wardJitterCoord(h);
+    const col = cesiumColorForQ(h);
+    const beaconH = 18 + h.total_members * 2;   // taller = more people
+
+    // Pin shaft
+    viewer.entities.add({
+      id: `__beacon_${h.id}`,
+      position: Cesium.Cartesian3.fromDegrees(pos.lng, pos.lat, beaconH / 2),
+      cylinder: {
+        length: beaconH,
+        topRadius: 1.8,
+        bottomRadius: 3.5,
+        material: col.withAlpha(0.92),
+        outline: false,
+        distanceDisplayCondition: BEACON_FAR
+      }
+    });
+
+    // Glowing cap on pin
+    viewer.entities.add({
+      id: `__beacon_${h.id}_cap`,
+      position: Cesium.Cartesian3.fromDegrees(pos.lng, pos.lat, beaconH + 4),
+      ellipsoid: {
+        radii: new Cesium.Cartesian3(5, 5, 5),
+        material: col.withAlpha(0.85),
+        distanceDisplayCondition: BEACON_FAR
+      }
+    });
+  });
+
+  // ══════════════════════════════════════════════
+  // STEP 1c — Individual 3D buildings (close zoom < 1.5 km)
+  // ══════════════════════════════════════════════
+  const BUILD_FAR = new Cesium.DistanceDisplayCondition(0, 1500);
 
   houses.forEach(h => {
-    const pos     = jitterCoord(h);
+    const pos     = wardJitterCoord(h);
     const storeys = h.total_members <= 3 ? 1 : h.total_members <= 6 ? 2 : 3;
     const wallH   = storeys * 3.2;
     const plinthH = 0.4;
@@ -3539,12 +3822,245 @@ function renderCesium(houses) {
       fp
     });
   });
+
+  // ══════════════════════════════════════════════
+  // STEP 2 — Infrastructure scenario overlays
+  // Rendered when a routing plan is active
+  // ══════════════════════════════════════════════
+  if (activeQ === 'elec_route') _render3DElecRoute();
+  if (activeQ === 'slwm_route') _render3DSlwmRoute();
+}
+
+// ── 3D Electricity Grid Expansion route ──────────────────
+function _render3DElecRoute() {
+  const E = ELECTRICITY_PLAN;
+  const INFRA_FAR = new Cesium.DistanceDisplayCondition(0, 9000);
+  const LBL_FAR   = new Cesium.DistanceDisplayCondition(0, 3000);
+
+  // Build pole lookup
+  const poleMap = {};
+  E.poles.forEach(p => { poleMap[p.id] = p; });
+
+  // Poles — cylinders of varying height
+  E.poles.forEach(p => {
+    const isXfmr  = p.type === 'transformer';
+    const isRiver = p.type === 'river_pole';
+    const colHex  = isXfmr ? '#ffd700' : isRiver ? '#ff6b35' : '#78c8ff';
+    const col     = Cesium.Color.fromCssColorString(colHex);
+    const h       = p.height_m;
+    const r       = isXfmr ? 2.2 : isRiver ? 0.5 : 0.3;
+
+    viewer.entities.add({
+      id: `__infra_pole_${p.id}`,
+      position: Cesium.Cartesian3.fromDegrees(p.lng, p.lat, h / 2),
+      cylinder: {
+        length: h, topRadius: r, bottomRadius: r,
+        material: col.withAlpha(0.95),
+        distanceDisplayCondition: INFRA_FAR
+      }
+    });
+
+    // Cap sphere on top
+    viewer.entities.add({
+      id: `__infra_pole_${p.id}_top`,
+      position: Cesium.Cartesian3.fromDegrees(p.lng, p.lat, h + 1.5),
+      ellipsoid: {
+        radii: new Cesium.Cartesian3(isXfmr ? 4 : 1.5, isXfmr ? 4 : 1.5, isXfmr ? 4 : 1.5),
+        material: col,
+        distanceDisplayCondition: INFRA_FAR
+      }
+    });
+
+    // Labels (close range)
+    viewer.entities.add({
+      id: `__infra_pole_${p.id}_lbl`,
+      position: Cesium.Cartesian3.fromDegrees(p.lng, p.lat, h + 6),
+      label: {
+        text: p.label,
+        font: 'bold 12px "DM Sans", sans-serif',
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: Cesium.Color.fromCssColorString('#000'),
+        outlineWidth: 3,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        distanceDisplayCondition: LBL_FAR,
+        showBackground: true,
+        backgroundColor: col.withAlpha(0.7),
+        backgroundPadding: new Cesium.Cartesian2(6, 4),
+        pixelOffset: new Cesium.Cartesian2(0, -6)
+      }
+    });
+  });
+
+  // Conductor wires — polylines between poles at wire height
+  E.conductors.forEach((c, i) => {
+    const a = poleMap[c.from], b = poleMap[c.to];
+    if (!a || !b) return;
+    const isRiverSpan = (c.conductor || '').includes('river');
+    const wireCol = isRiverSpan
+      ? Cesium.Color.fromCssColorString('#ff8c00')
+      : Cesium.Color.fromCssColorString('#ffe566').withAlpha(0.9);
+
+    viewer.entities.add({
+      id: `__infra_wire_${i}`,
+      polyline: {
+        positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+          a.lng, a.lat, a.height_m,
+          b.lng, b.lat, b.height_m
+        ]),
+        width: isRiverSpan ? 4 : 2,
+        material: new Cesium.PolylineGlowMaterialProperty({
+          glowPower: 0.18,
+          color: wireCol
+        }),
+        clampToGround: false,
+        distanceDisplayCondition: INFRA_FAR
+      }
+    });
+  });
+
+  // Nallah obstacle line
+  const nallah = E.zone2.obstacles[0];
+  viewer.entities.add({
+    id: '__infra_nallah',
+    polyline: {
+      positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+        nallah.lng1, nallah.lat1, 1,
+        nallah.lng2, nallah.lat2, 1
+      ]),
+      width: 5,
+      material: Cesium.Color.fromCssColorString('#3b82f6').withAlpha(0.7),
+      clampToGround: false,
+      distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 9000)
+    }
+  });
+
+  // Fly camera to show the full pole route
+  const _h = allHouses.length ? allHouses : SEED_HOUSES;
+  const midLat = (E.zone1.transformer.lat + E.poles[E.poles.length-1].lat) / 2;
+  const midLng = (E.zone1.transformer.lng + E.poles[E.poles.length-1].lng) / 2;
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(midLng, midLat - 0.010, 2200),
+    orientation: {
+      heading: Cesium.Math.toRadians(0),
+      pitch:   Cesium.Math.toRadians(-45),
+      roll:    0
+    },
+    duration: 1.4
+  });
+}
+
+// ── 3D SLWM route ──────────────────────────────────────────
+function _render3DSlwmRoute() {
+  const S = SANITATION_PLAN;
+  const INFRA_FAR = new Cesium.DistanceDisplayCondition(0, 2000);
+
+  S.nodes.forEach(n => {
+    const isUnit = n.type === 'biogas' || n.type === 'slwm_site';
+    const col = n.type === 'toilet'   ? Cesium.Color.fromCssColorString('#40c060') :
+                n.type === 'biogas'   ? Cesium.Color.fromCssColorString('#e0a028') :
+                n.type === 'drain'    ? Cesium.Color.fromCssColorString('#3888e0') :
+                                        Cesium.Color.fromCssColorString('#8868d0');
+    const h = isUnit ? 4 : 2;
+    viewer.entities.add({
+      id: `__slwm_node_${n.id}`,
+      position: Cesium.Cartesian3.fromDegrees(n.lng, n.lat, h / 2),
+      cylinder: {
+        length: h, topRadius: isUnit ? 3 : 1.2, bottomRadius: isUnit ? 3 : 1.2,
+        material: col.withAlpha(0.9),
+        distanceDisplayCondition: INFRA_FAR
+      }
+    });
+    viewer.entities.add({
+      id: `__slwm_node_${n.id}_lbl`,
+      position: Cesium.Cartesian3.fromDegrees(n.lng, n.lat, h + 4),
+      label: {
+        text: n.label,
+        font: 'bold 11px "DM Sans", sans-serif',
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: Cesium.Color.BLACK, outlineWidth: 2,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 800),
+        showBackground: true,
+        backgroundColor: col.withAlpha(0.7),
+        backgroundPadding: new Cesium.Cartesian2(5, 3)
+      }
+    });
+  });
+
+  S.pipes.forEach((p, i) => {
+    const a = S.nodes.find(n => n.id === p.from);
+    const b = S.nodes.find(n => n.id === p.to);
+    if (!a || !b) return;
+    viewer.entities.add({
+      id: `__slwm_pipe_${i}`,
+      polyline: {
+        positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+          a.lng, a.lat, 0.5, b.lng, b.lat, 0.5
+        ]),
+        width: 3,
+        material: new Cesium.PolylineGlowMaterialProperty({
+          glowPower: 0.22,
+          color: Cesium.Color.fromCssColorString('#3888e0').withAlpha(0.85)
+        }),
+        clampToGround: false,
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2000)
+      }
+    });
+  });
+
+  // Fly to sanitation route
+  const nodeCenter = S.nodes.reduce((a, n) => ({lat: a.lat+n.lat, lng: a.lng+n.lng, c: a.c+1}), {lat:0, lng:0, c:0});
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(nodeCenter.lng/nodeCenter.c, nodeCenter.lat/nodeCenter.c - 0.003, 500),
+    orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-55), roll: 0 },
+    duration: 1.4
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// BEFORE/AFTER SIMULATION TOGGLE
+// ═══════════════════════════════════════════════════════════
+
+function _simToggleHTML(scenarioId) {
+  return `<div class="sim-toggle">
+    <span class="sim-toggle-label ${!_simMode?'active':''}">BEFORE</span>
+    <div class="sim-switch ${_simMode?'on':''}" onclick="toggleSimulation('${scenarioId}')"></div>
+    <span class="sim-toggle-label ${_simMode?'active':''}">AFTER</span>
+  </div>`;
+}
+
+function toggleSimulation(scenarioId) {
+  _simMode = !_simMode;
+  // Re-render the current scenario with simulation state
+  const h = applyFilters(allHouses);
+  switch(scenarioId) {
+    case 'no_toilet': qNoToilet(h); break;
+    case 'no_elec':   qNoElec(h);   break;
+    case 'no_water':  qNoWater(h);  break;
+    case 'no_drain':  qNoDrain(h);  break;
+    case 'no_gas':    qNoGas(h);    break;
+  }
+}
+
+function _simImpactBlock(rows) {
+  if (!_simMode) return '';
+  return `<div class="sim-impact animating">
+    <div class="sim-impact-title">Projected Impact After Intervention</div>
+    ${rows.map(r => `<div class="sim-impact-row">
+      <span>${r.label}</span>
+      <span><span class="old">${r.before}</span><span class="arrow">&rarr;</span><span class="new">${r.after}</span></span>
+    </div>`).join('')}
+  </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════
 // QUESTION DISPATCH
 // ═══════════════════════════════════════════════════════════
 function pickQ(id) {
+  // Reset simulation mode when switching to a different question
+  if (activeQ !== id) _simMode = false;
   activeQ = id;
   document.querySelectorAll('.q-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
   const h = applyFilters(allHouses);
@@ -3644,18 +4160,35 @@ function qWardPop(h) {
 
 function qNoToilet(h) {
   const no = h.filter(x=>!x.has_toilet), yes = h.filter(x=>x.has_toilet);
-  drawProblemZones(h, 'toilet');
-  plotLeaflet(h, x => x.has_toilet ? C.green : C.red, x => x.has_toilet ? 5 + x.total_members : 7 + x.total_members * 2);
-  showLegend([{c:C.red,l:'No toilet'},{c:C.green,l:'Has toilet'}]);
   const ap = no.reduce((s,x)=>s+x.total_members,0);
   const wb = wardCount(no);
+  const covPct = h.length?((yes.length/h.length)*100).toFixed(0):0;
+
+  if (_simMode) {
+    // AFTER: show all green (simulating SBM toilet construction for all)
+    plotLeaflet(h, () => C.green, x => 5 + x.total_members);
+    showLegend([{c:C.green,l:'All have toilet (simulated)'}]);
+  } else {
+    drawProblemZones(h, 'toilet');
+    plotLeaflet(h, x => x.has_toilet ? C.green : C.red, x => x.has_toilet ? 5 + x.total_members : 7 + x.total_members * 2);
+    showLegend([{c:C.red,l:'No toilet'},{c:C.green,l:'Has toilet'}]);
+  }
+
   setDashInsight('Sanitation — No Toilet', `
+    ${_simToggleHTML('no_toilet')}
     <div class="sg">
-      <div class="sc"><div class="lb">No Toilet</div><div class="vl red">${no.length}</div></div>
-      <div class="sc"><div class="lb">Has Toilet</div><div class="vl grn">${yes.length}</div></div>
-      <div class="sc"><div class="lb">Pop Affected</div><div class="vl red">${ap}</div></div>
-      <div class="sc"><div class="lb">Coverage</div><div class="vl amb">${h.length?((yes.length/h.length)*100).toFixed(0):0}%</div></div>
+      <div class="sc"><div class="lb">No Toilet</div><div class="vl ${_simMode?'grn':'red'}">${_simMode?0:no.length}</div></div>
+      <div class="sc"><div class="lb">Has Toilet</div><div class="vl grn">${_simMode?h.length:yes.length}</div></div>
+      <div class="sc"><div class="lb">Pop Affected</div><div class="vl ${_simMode?'grn':'red'}">${_simMode?0:ap}</div></div>
+      <div class="sc"><div class="lb">Coverage</div><div class="vl ${_simMode?'grn':'amb'}">${_simMode?'100':covPct}%</div></div>
     </div>
+    ${_simMode ? _simImpactBlock([
+      { label: 'Households w/o toilet', before: no.length, after: '0' },
+      { label: 'Coverage', before: covPct+'%', after: '100%' },
+      { label: 'People at risk', before: ap, after: '0' },
+      { label: 'Scheme', before: '—', after: 'SBM (Swachh Bharat)' },
+      { label: 'Est. cost', before: '—', after: '₹'+((no.length*12000)/100000).toFixed(1)+'L' }
+    ]) : `
     <div class="st">Why This Matters</div>
     <div class="rl">
       <div class="ri"><div class="ri-bar red"></div><div class="ri-c"><div class="ri-l">Open defecation health risk</div><div class="ri-v">${ap} people lack sanitation access</div></div></div>
@@ -3663,55 +4196,87 @@ function qNoToilet(h) {
       <div class="ri"><div class="ri-bar amb"></div><div class="ri-c"><div class="ri-l">Kuccha houses w/o toilet</div><div class="ri-v">${no.filter(x=>x.house_type==='Kuccha').length} households</div></div></div>
     </div>
     <div class="st">Ward Breakdown</div>
-    ${barChart(Object.entries(wb).sort((a,b)=>b[1]-a[1]).map(([w,c])=>({l:'Ward '+w,v:c,mx:Math.max(...Object.values(wb)),cl:'red'})))}
+    ${barChart(Object.entries(wb).sort((a,b)=>b[1]-a[1]).map(([w,c])=>({l:'Ward '+w,v:c,mx:Math.max(...Object.values(wb)),cl:'red'})))}`}
   `);
 }
 
 function qNoElec(h) {
   const no = h.filter(x=>!x.has_electricity);
-  drawProblemZones(h, 'electricity');
-  plotLeaflet(h, x => x.has_electricity ? C.green : C.red, x => x.has_electricity ? 5+x.total_members : 7+x.total_members*2);
-  showLegend([{c:C.red,l:'No electricity'},{c:C.green,l:'Connected'}]);
   const ap = no.reduce((s,x)=>s+x.total_members,0);
   const wb = wardCount(no);
+  const covPct = h.length?(((h.length-no.length)/h.length)*100).toFixed(0):0;
+
+  if (_simMode) {
+    plotLeaflet(h, () => C.green, x => 5 + x.total_members);
+    showLegend([{c:C.green,l:'All electrified (simulated)'}]);
+  } else {
+    drawProblemZones(h, 'electricity');
+    plotLeaflet(h, x => x.has_electricity ? C.green : C.red, x => x.has_electricity ? 5+x.total_members : 7+x.total_members*2);
+    showLegend([{c:C.red,l:'No electricity'},{c:C.green,l:'Connected'}]);
+  }
+
   setDashInsight('Electrification Gaps', `
+    ${_simToggleHTML('no_elec')}
     <div class="sg">
-      <div class="sc"><div class="lb">No Elec.</div><div class="vl red">${no.length}</div></div>
-      <div class="sc"><div class="lb">Pop Affected</div><div class="vl red">${ap}</div></div>
-      <div class="sc"><div class="lb">Coverage</div><div class="vl amb">${h.length?(((h.length-no.length)/h.length)*100).toFixed(0):0}%</div></div>
-      <div class="sc"><div class="lb">BPL w/o</div><div class="vl red">${no.filter(x=>x.bpl).length}</div></div>
+      <div class="sc"><div class="lb">No Elec.</div><div class="vl ${_simMode?'grn':'red'}">${_simMode?0:no.length}</div></div>
+      <div class="sc"><div class="lb">Pop Affected</div><div class="vl ${_simMode?'grn':'red'}">${_simMode?0:ap}</div></div>
+      <div class="sc"><div class="lb">Coverage</div><div class="vl ${_simMode?'grn':'amb'}">${_simMode?'100':covPct}%</div></div>
+      <div class="sc"><div class="lb">BPL w/o</div><div class="vl ${_simMode?'grn':'red'}">${_simMode?0:no.filter(x=>x.bpl).length}</div></div>
     </div>
+    ${_simMode ? _simImpactBlock([
+      { label: 'Unelectrified HH', before: no.length, after: '0' },
+      { label: 'Coverage', before: covPct+'%', after: '100%' },
+      { label: 'People in dark', before: ap, after: '0' },
+      { label: 'Scheme', before: '—', after: 'Saubhagya (PMSBY)' },
+      { label: 'Est. cost', before: '—', after: '₹'+((no.length*25000)/100000).toFixed(1)+'L' }
+    ]) : `
     <div class="st">Reasons</div>
     <div class="rl">
       <div class="ri"><div class="ri-bar red"></div><div class="ri-c"><div class="ri-l">Remote / disconnected areas</div><div class="ri-v">${no.length} households in dark zones</div></div></div>
       <div class="ri"><div class="ri-bar amb"></div><div class="ri-c"><div class="ri-l">Kuccha structures harder to electrify</div><div class="ri-v">${no.filter(x=>x.house_type==='Kuccha').length} kuccha without power</div></div></div>
     </div>
     <div class="st">Ward Breakdown</div>
-    ${barChart(Object.entries(wb).sort((a,b)=>b[1]-a[1]).map(([w,c])=>({l:'Ward '+w,v:c,mx:Math.max(...Object.values(wb)),cl:'red'})))}
+    ${barChart(Object.entries(wb).sort((a,b)=>b[1]-a[1]).map(([w,c])=>({l:'Ward '+w,v:c,mx:Math.max(...Object.values(wb)),cl:'red'})))}`}
   `);
 }
 
 function qNoWater(h) {
   const no = h.filter(x=>!x.has_water_supply);
-  drawProblemZones(h, 'water');
-  plotLeaflet(h, x => x.has_water_supply ? C.teal : C.amber, x => 5+x.total_members*1.5);
-  showLegend([{c:C.amber,l:'No water'},{c:C.teal,l:'Has water'}]);
   const ap = no.reduce((s,x)=>s+x.total_members,0);
   const wb = wardCount(no);
+  const covPct = h.length?(((h.length-no.length)/h.length)*100).toFixed(0):0;
+
+  if (_simMode) {
+    plotLeaflet(h, () => C.teal, x => 5 + x.total_members);
+    showLegend([{c:C.teal,l:'All have water (simulated)'}]);
+  } else {
+    drawProblemZones(h, 'water');
+    plotLeaflet(h, x => x.has_water_supply ? C.teal : C.amber, x => 5+x.total_members*1.5);
+    showLegend([{c:C.amber,l:'No water'},{c:C.teal,l:'Has water'}]);
+  }
+
   setDashInsight('Water Supply Gaps', `
+    ${_simToggleHTML('no_water')}
     <div class="sg">
-      <div class="sc"><div class="lb">No Water</div><div class="vl amb">${no.length}</div></div>
-      <div class="sc"><div class="lb">Pop Affected</div><div class="vl amb">${ap}</div></div>
-      <div class="sc"><div class="lb">Coverage</div><div class="vl tl">${h.length?(((h.length-no.length)/h.length)*100).toFixed(0):0}%</div></div>
-      <div class="sc"><div class="lb">BPL w/o</div><div class="vl red">${no.filter(x=>x.bpl).length}</div></div>
+      <div class="sc"><div class="lb">No Water</div><div class="vl ${_simMode?'grn':'amb'}">${_simMode?0:no.length}</div></div>
+      <div class="sc"><div class="lb">Pop Affected</div><div class="vl ${_simMode?'grn':'amb'}">${_simMode?0:ap}</div></div>
+      <div class="sc"><div class="lb">Coverage</div><div class="vl ${_simMode?'grn':'tl'}">${_simMode?'100':covPct}%</div></div>
+      <div class="sc"><div class="lb">BPL w/o</div><div class="vl ${_simMode?'grn':'red'}">${_simMode?0:no.filter(x=>x.bpl).length}</div></div>
     </div>
+    ${_simMode ? _simImpactBlock([
+      { label: 'HH without water', before: no.length, after: '0' },
+      { label: 'Coverage', before: covPct+'%', after: '100%' },
+      { label: 'People affected', before: ap, after: '0' },
+      { label: 'Scheme', before: '—', after: 'Jal Jeevan Mission' },
+      { label: 'Est. cost', before: '—', after: '₹'+((no.length*35000)/100000).toFixed(1)+'L' }
+    ]) : `
     <div class="st">Reasons</div>
     <div class="rl">
       <div class="ri"><div class="ri-bar amb"></div><div class="ri-c"><div class="ri-l">No piped connection</div><div class="ri-v">${no.length} rely on wells/tankers</div></div></div>
       <div class="ri"><div class="ri-bar red"></div><div class="ri-c"><div class="ri-l">BPL cannot afford alternatives</div><div class="ri-v">${no.filter(x=>x.bpl).length} families at risk</div></div></div>
     </div>
     <div class="st">Ward Breakdown</div>
-    ${barChart(Object.entries(wb).sort((a,b)=>b[1]-a[1]).map(([w,c])=>({l:'Ward '+w,v:c,mx:Math.max(...Object.values(wb)),cl:'amb'})))}
+    ${barChart(Object.entries(wb).sort((a,b)=>b[1]-a[1]).map(([w,c])=>({l:'Ward '+w,v:c,mx:Math.max(...Object.values(wb)),cl:'amb'})))}`}
   `);
 }
 
@@ -3836,18 +4401,34 @@ function qPopInfra(h) {
 function qNoDrain(h) {
   const no = h.filter(x => !x.has_drainage);
   const yes = h.filter(x => x.has_drainage);
-  drawProblemZones(h);
-  plotLeaflet(h, x => x.has_drainage ? C.teal : C.orange, x => 5 + x.total_members * 1.4);
-  showLegend([{c:C.orange,l:'No drainage'},{c:C.teal,l:'Has drainage'}]);
   const ap = no.reduce((s,x) => s + x.total_members, 0);
   const sv = VILLAGE_SURVEY.roads_drainage;
+  const covPct = h.length?Math.round(yes.length/h.length*100):0;
+
+  if (_simMode) {
+    plotLeaflet(h, () => C.teal, x => 5 + x.total_members);
+    showLegend([{c:C.teal,l:'All have drainage (simulated)'}]);
+  } else {
+    drawProblemZones(h);
+    plotLeaflet(h, x => x.has_drainage ? C.teal : C.orange, x => 5 + x.total_members * 1.4);
+    showLegend([{c:C.orange,l:'No drainage'},{c:C.teal,l:'Has drainage'}]);
+  }
+
   setDashInsight('Drainage & Waterlogging', `
+    ${_simToggleHTML('no_drain')}
     <div class="sg">
-      <div class="sc"><div class="lb">No Drainage</div><div class="vl red">${no.length}</div></div>
-      <div class="sc"><div class="lb">Has Drainage</div><div class="vl grn">${yes.length}</div></div>
-      <div class="sc"><div class="lb">Pop Affected</div><div class="vl red">${ap}</div></div>
-      <div class="sc"><div class="lb">Drain Needed</div><div class="vl amb">${sv.drain_to_construct_m}m</div></div>
+      <div class="sc"><div class="lb">No Drainage</div><div class="vl ${_simMode?'grn':'red'}">${_simMode?0:no.length}</div></div>
+      <div class="sc"><div class="lb">Has Drainage</div><div class="vl grn">${_simMode?h.length:yes.length}</div></div>
+      <div class="sc"><div class="lb">Pop Affected</div><div class="vl ${_simMode?'grn':'red'}">${_simMode?0:ap}</div></div>
+      <div class="sc"><div class="lb">Drain Needed</div><div class="vl ${_simMode?'grn':'amb'}">${_simMode?'0m':sv.drain_to_construct_m+'m'}</div></div>
     </div>
+    ${_simMode ? _simImpactBlock([
+      { label: 'HH without drainage', before: no.length, after: '0' },
+      { label: 'Coverage', before: covPct+'%', after: '100%' },
+      { label: 'Drain to build', before: sv.drain_to_construct_m+'m', after: '0m' },
+      { label: 'Scheme', before: '—', after: '15th FC / MGNREGA' },
+      { label: 'Est. cost', before: '—', after: '₹15L' }
+    ]) : `
     <div class="st">Survey Data (§3)</div>
     <div class="rl">
       <div class="ri"><div class="ri-bar tl"></div><div class="ri-c"><div class="ri-l">Existing drain length</div><div class="ri-v">${sv.total_drain_length_m}m of ${sv.total_internal_road_m}m road</div></div></div>
@@ -3858,7 +4439,7 @@ function qNoDrain(h) {
       ${sv.drainage_challenges.map(c => `<div class="ri"><div class="ri-bar amb"></div><div class="ri-c"><div class="ri-l">${c}</div><div class="ri-v">Needs intervention</div></div></div>`).join('')}
     </div>
     <div class="st">Ward Breakdown</div>
-    ${barChart(Object.entries(wardCount(no)).sort((a,b)=>b[1]-a[1]).map(([w,c])=>({l:WARD_NAMES[w]||'W'+w,v:c,mx:Math.max(...Object.values(wardCount(no))),cl:'amb'})))}
+    ${barChart(Object.entries(wardCount(no)).sort((a,b)=>b[1]-a[1]).map(([w,c])=>({l:WARD_NAMES[w]||'W'+w,v:c,mx:Math.max(...Object.values(wardCount(no))),cl:'amb'})))}`}
   `);
 }
 
@@ -3899,17 +4480,33 @@ function qWaste(h) {
 function qNoGas(h) {
   const no = h.filter(x => !x.has_gas);
   const yes = h.filter(x => x.has_gas);
-  drawProblemZones(h);
-  plotLeaflet(h, x => x.has_gas ? C.green : C.orange, x => 5 + x.total_members * 1.3);
-  showLegend([{c:C.orange,l:'No LPG'},{c:C.green,l:'Has LPG'}]);
   const bplNoGas = no.filter(x => x.bpl).length;
+  const covPct = h.length?Math.round(yes.length/h.length*100):0;
+
+  if (_simMode) {
+    plotLeaflet(h, () => C.green, x => 5 + x.total_members);
+    showLegend([{c:C.green,l:'All have LPG (simulated)'}]);
+  } else {
+    drawProblemZones(h);
+    plotLeaflet(h, x => x.has_gas ? C.green : C.orange, x => 5 + x.total_members * 1.3);
+    showLegend([{c:C.orange,l:'No LPG'},{c:C.green,l:'Has LPG'}]);
+  }
+
   setDashInsight('LPG / Clean Fuel Access', `
+    ${_simToggleHTML('no_gas')}
     <div class="sg">
-      <div class="sc"><div class="lb">No LPG</div><div class="vl amb">${no.length}</div></div>
-      <div class="sc"><div class="lb">Has LPG</div><div class="vl grn">${yes.length}</div></div>
-      <div class="sc"><div class="lb">Coverage</div><div class="vl ${yes.length/h.length>0.7?'grn':'amb'}">${h.length?Math.round(yes.length/h.length*100):0}%</div></div>
-      <div class="sc"><div class="lb">BPL w/o</div><div class="vl red">${bplNoGas}</div></div>
+      <div class="sc"><div class="lb">No LPG</div><div class="vl ${_simMode?'grn':'amb'}">${_simMode?0:no.length}</div></div>
+      <div class="sc"><div class="lb">Has LPG</div><div class="vl grn">${_simMode?h.length:yes.length}</div></div>
+      <div class="sc"><div class="lb">Coverage</div><div class="vl ${_simMode?'grn':(covPct>70?'grn':'amb')}">${_simMode?'100':covPct}%</div></div>
+      <div class="sc"><div class="lb">BPL w/o</div><div class="vl ${_simMode?'grn':'red'}">${_simMode?0:bplNoGas}</div></div>
     </div>
+    ${_simMode ? _simImpactBlock([
+      { label: 'HH without LPG', before: no.length, after: '0' },
+      { label: 'Coverage', before: covPct+'%', after: '100%' },
+      { label: 'BPL without fuel', before: bplNoGas, after: '0' },
+      { label: 'Scheme', before: '—', after: 'PMUY (Ujjwala Yojana)' },
+      { label: 'Est. cost', before: '—', after: '₹'+((bplNoGas*1600)/100000).toFixed(1)+'L subsidy' }
+    ]) : `
     <div class="st">Root Cause & Solution</div>
     <div class="rl">
       <div class="ri"><div class="ri-bar red"></div><div class="ri-c"><div class="ri-l">BPL cannot afford LPG refills</div><div class="ri-v">${bplNoGas} BPL HH cooking on firewood/dung</div></div></div>
@@ -3919,7 +4516,7 @@ function qNoGas(h) {
     <div class="st">LPG Agency</div>
     <div class="rl">
       <div class="ri"><div class="ri-bar tl"></div><div class="ri-c"><div class="ri-l">${VILLAGE_SURVEY.pds.lpg_agency.name}</div><div class="ri-v">${VILLAGE_SURVEY.pds.lpg_agency.distance_km} km from village</div></div></div>
-    </div>
+    </div>`}
   `);
 }
 
@@ -3927,9 +4524,12 @@ function qRoadsInfra(h) {
   const sv = VILLAGE_SURVEY.roads_drainage;
   const ed = VILLAGE_SURVEY.education;
   drawProblemZones(h);
-  drawVillageVisualization(h);
   plotLeaflet(h, x => riskHex(riskScore(x)));
-  showLegend([{c:'#d4cfc8',l:'Paved road'},{c:'#c8a46a',l:'Unpaved track'},{c:C.blue,l:'School'},{c:C.red,l:'Hospital'}]);
+  drawVillageVisualization(h);
+  // Zoom map to show roads connecting all wards
+  const roadPts = _villageRoads().flatMap(r => r.path);
+  if (roadPts.length) lmap.fitBounds(L.latLngBounds(roadPts.concat(h.map(x=>[x.lat,x.lng]))).pad(0.08), { animate:true, duration:0.6 });
+  showLegend([{c:'#d4cfc8',l:'Paved road'},{c:'#c8a46a',l:'Unpaved track'},{c:C.blue,l:'School'},{c:C.red,l:'Hospital'},{c:'#a855f7',l:'Anganwadi'}]);
   setDashInsight('Roads, Drainage & Connectivity', `
     <div class="sg">
       <div class="sc"><div class="lb">Total Roads</div><div class="vl tl">${sv.total_internal_road_m}m</div></div>
@@ -3964,8 +4564,12 @@ function qEduHealth(h) {
   const aw = VILLAGE_SURVEY.anganwadi;
   const ic = VILLAGE_SURVEY.icds;
   drawProblemZones(h);
-  drawVillageVisualization(h);
   plotLeaflet(h, x => riskHex(riskScore(x)));
+  drawVillageVisualization(h);
+  // Zoom map to show facility markers (schools, PHC, AWC)
+  const fac = _villageFacilities();
+  const facPts = [...fac.schools, ...fac.hospitals, ...(fac.anganwadis||[])].map(f => [f.lat, f.lng]);
+  if (facPts.length) lmap.fitBounds(L.latLngBounds(facPts.concat(h.map(x=>[x.lat,x.lng]))).pad(0.1), { animate:true, duration:0.6 });
   showLegend([{c:C.blue,l:'School'},{c:C.red,l:'Health centre'},{c:C.purple,l:'Anganwadi'}]);
   setDashInsight('Education, Health & ICDS', `
     <div class="sg">
